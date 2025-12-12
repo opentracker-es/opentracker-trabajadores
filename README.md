@@ -278,6 +278,49 @@ docker pull ghcr.io/opentracker-es/opentracker-trabajadores:1.0.0
 
 **Plataformas soportadas:** linux/amd64, linux/arm64
 
+### Variables de Entorno en Docker
+
+La imagen soporta dos tipos de variables:
+
+#### Variables Runtime (configurables en docker-compose)
+
+Estas variables se pueden cambiar **sin reconstruir la imagen**:
+
+| Variable | Descripción | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | URL de la API | (requerida) |
+| `VITE_API_USERNAME` | Usuario para auth JWT | (requerida) |
+| `VITE_API_PASSWORD` | Contraseña para auth JWT | (requerida) |
+| `VITE_APP_NAME` | Nombre de la aplicación | `OpenTracker` |
+| `VITE_APP_LOGO` | Ruta al logo | `/logo.png` |
+
+```yaml
+# docker-compose.yml
+services:
+  webapp:
+    image: ghcr.io/opentracker-es/opentracker-trabajadores:latest
+    environment:
+      - VITE_API_URL=https://mi-dominio.com/api
+      - VITE_API_USERNAME=webapp-user
+      - VITE_API_PASSWORD=mi-password-seguro
+      - VITE_APP_NAME=Mi Empresa
+      - VITE_APP_LOGO=/mi-logo.png
+```
+
+#### Variables Build-time (requieren reconstruir imagen)
+
+Estas variables se configuran en **GitHub Actions** como repository variables:
+
+| Variable | Descripción | Default |
+|----------|-------------|---------|
+| `VITE_BASE_PATH` | Path base para routing (ej: `/trabajadores`) | `/` |
+
+Para cambiar el `basePath`, actualiza la variable en GitHub → Settings → Secrets and variables → Actions → Variables, y ejecuta el workflow.
+
+### Cómo funciona
+
+La imagen usa un `docker-entrypoint.sh` que reemplaza placeholders con los valores de las variables de entorno al iniciar el contenedor. Esto permite usar la misma imagen en diferentes entornos.
+
 ### Docker Compose
 
 ```bash
@@ -287,15 +330,6 @@ docker-compose up -d
 # O construir manualmente
 docker build -t opentracker-trabajadores .
 docker run -p 80:80 opentracker-trabajadores
-```
-
-### Variables de Entorno en Producción
-
-Las variables `VITE_*` deben estar disponibles en tiempo de build:
-
-```bash
-# Build con variables específicas
-VITE_API_URL=https://api.opentracker.com npm run build
 ```
 
 ## 🔍 Debugging
