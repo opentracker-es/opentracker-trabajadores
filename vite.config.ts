@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   const basePath = env.VITE_BASE_PATH || process.env.VITE_BASE_PATH || '/'
 
   // App name for PWA manifest and title
-  const appName = env.VITE_APP_NAME || process.env.VITE_APP_NAME || 'OpenTracker'
+  const appName = env.VITE_APP_NAME || process.env.VITE_APP_NAME || 'OpenJornada'
 
   return {
     base: basePath,

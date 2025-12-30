@@ -1,12 +1,12 @@
 {
-  "name": "opentracker-webapp",
+  "name": "openjornada-webapp",
   "version": "1.0.2",
-  "description": "OpenTracker Worker Web App - Sistema de Registro de Jornada Laboral",
+  "description": "OpenJornada Worker Web App - Sistema de Registro de Jornada Laboral",
   "license": "AGPL-3.0",
-  "author": "OpenTracker Contributors",
+  "author": "OpenJornada Contributors",
   "repository": {
     "type": "git",
-    "url": "https://github.com/[YOUR-ORG]/opentracker"
+    "url": "https://github.com/[YOUR-ORG]/openjornada"
   },
   "private": true,
   "type": "module",

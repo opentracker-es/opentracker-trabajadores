@@ -435,7 +435,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-400 mt-6 pt-4 border-t border-gray-200">
-        <p>OpenTracker - Registro de Jornada</p>
+        <p>OpenJornada - Registro de Jornada</p>
       </div>
     </div>
   );

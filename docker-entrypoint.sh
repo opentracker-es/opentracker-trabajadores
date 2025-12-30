@@ -23,7 +23,7 @@ replace_placeholder() {
 replace_placeholder "__VITE_API_URL__" "${VITE_API_URL:-}"
 replace_placeholder "__VITE_API_USERNAME__" "${VITE_API_USERNAME:-}"
 replace_placeholder "__VITE_API_PASSWORD__" "${VITE_API_PASSWORD:-}"
-replace_placeholder "__VITE_APP_NAME__" "${VITE_APP_NAME:-OpenTracker}"
+replace_placeholder "__VITE_APP_NAME__" "${VITE_APP_NAME:-OpenJornada}"
 replace_placeholder "__VITE_APP_LOGO__" "${VITE_APP_LOGO:-/logo.png}"
 
 echo "Environment variables injected successfully"
