@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import CreateTimeRecord from "./CreateTimeRecord";
 import CreateIncident from "./CreateIncident";
 import CreateChangeRequest from "./CreateChangeRequest";
+import MonthlyReport from "./MonthlyReport";
+import MonthlySignature from "./MonthlySignature";
 import Settings from "./Settings";
 import Help from "./Help";
 import PrivacyModal from "./PrivacyModal";
@@ -17,7 +19,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type View = "menu" | "time-record" | "incident" | "change-request" | "settings" | "help";
+type View = "menu" | "time-record" | "incident" | "change-request" | "monthly-report" | "monthly-signature" | "settings" | "help";
 
 const PRIVACY_ACCEPTED_KEY = "opentracker_privacy_accepted";
 
@@ -62,6 +64,22 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       case "change-request":
         return (
           <CreateChangeRequest
+            onBack={() => setCurrentView("menu")}
+            userEmail={userData.email}
+            userPassword={userData.password}
+          />
+        );
+      case "monthly-report":
+        return (
+          <MonthlyReport
+            onBack={() => setCurrentView("menu")}
+            userEmail={userData.email}
+            userPassword={userData.password}
+          />
+        );
+      case "monthly-signature":
+        return (
+          <MonthlySignature
             onBack={() => setCurrentView("menu")}
             userEmail={userData.email}
             userPassword={userData.password}
@@ -142,6 +160,46 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                 />
               </svg>
               Petición de cambio de registro
+            </button>
+
+            <button
+              onClick={() => setCurrentView("monthly-report")}
+              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
+            >
+              <svg
+                className="w-5 h-5 mr-3 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Consultar informe mensual
+            </button>
+
+            <button
+              onClick={() => setCurrentView("monthly-signature")}
+              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
+            >
+              <svg
+                className="w-5 h-5 mr-3 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Firmar registros mensuales
             </button>
 
             <button

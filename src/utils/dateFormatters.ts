@@ -136,3 +136,27 @@ export const datetimeLocalToUTC = (
 export const getBrowserTimezone = (): string => {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
+
+const MONTH_NAMES_ES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+/**
+ * Devuelve el nombre del mes en español
+ * @param month - Número del mes (1-12)
+ */
+export const getMonthName = (month: number): string => {
+  return MONTH_NAMES_ES[month - 1] || '';
+};
+
+/**
+ * Formatea minutos a formato "Xh Ym"
+ * @param minutes - Minutos totales
+ */
+export const formatMinutesToHoursMinutes = (minutes: number): string => {
+  if (!minutes || minutes <= 0) return '0h 0m';
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hours}h ${mins}m`;
+};

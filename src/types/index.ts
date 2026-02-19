@@ -146,3 +146,80 @@ export interface PendingCheckResponse {
   has_pending: boolean;
   pending_request_id?: string;
 }
+
+// Monthly Reports (worker self-service)
+
+export interface MonthlyReportRequest {
+  email: string;
+  password: string;
+  company_id: string;
+  year: number;
+  month: number;
+}
+
+export interface DaySummary {
+  date: string;
+  worker_id: string;
+  worker_name: string;
+  worker_id_number: string;
+  company_id: string;
+  company_name: string;
+  first_entry: string | null;
+  last_exit: string | null;
+  total_worked_minutes: number;
+  total_pause_minutes: number;
+  total_break_minutes: number;
+  records_count: number;
+  has_open_session: boolean;
+  is_modified: boolean;
+}
+
+export interface MonthlyReportResponse {
+  worker_id: string;
+  worker_name: string;
+  worker_id_number: string;
+  company_id: string;
+  company_name: string;
+  year: number;
+  month: number;
+  total_days_worked: number;
+  total_worked_minutes: number;
+  total_pause_minutes: number;
+  total_overtime_minutes: number;
+  daily_details: DaySummary[];
+  signature_status: 'pending' | 'signed' | 'not_required';
+  signed_at: string | null;
+  generated_at: string;
+}
+
+// Monthly Signatures
+
+export interface MonthlySignatureRequest {
+  email: string;
+  password: string;
+  company_id: string;
+  year: number;
+  month: number;
+}
+
+export interface MonthlySignatureResponse {
+  id: string;
+  worker_id: string;
+  company_id: string;
+  year: number;
+  month: number;
+  status: 'signed';
+  signed_at: string;
+}
+
+export interface SignatureMonth {
+  year: number;
+  month: number;
+  status: 'pending' | 'signed';
+  signed_at?: string;
+}
+
+export interface SignatureStatusResponse {
+  pending: SignatureMonth[];
+  signed: SignatureMonth[];
+}

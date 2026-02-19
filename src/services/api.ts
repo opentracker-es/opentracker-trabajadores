@@ -18,6 +18,11 @@ import {
   ChangeRequestCreate,
   ChangeRequest,
   PendingCheckResponse,
+  MonthlyReportRequest,
+  MonthlyReportResponse,
+  MonthlySignatureRequest,
+  MonthlySignatureResponse,
+  SignatureStatusResponse,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -533,6 +538,116 @@ class ApiService {
             throw new Error("Error del servidor. Inténtalo de nuevo.");
           default:
             throw new Error("Error al cargar los registros del día.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getMonthlyReport(
+    request: MonthlyReportRequest,
+  ): Promise<MonthlyReportResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<MonthlyReportResponse>(
+        `${API_URL}/api/reports/worker/monthly`,
+        request,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 403:
+            throw new Error("No tienes permisos para acceder a los datos de esta empresa.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar el informe mensual.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async signMonthlyReport(
+    request: MonthlySignatureRequest,
+  ): Promise<MonthlySignatureResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<MonthlySignatureResponse>(
+        `${API_URL}/api/reports/worker/monthly/sign`,
+        request,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 403:
+            throw new Error("No tienes permisos para esta empresa.");
+          case 409:
+            throw new Error("Este mes ya fue firmado anteriormente.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al firmar el informe mensual.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getSignatureStatus(
+    request: MonthlyReportRequest,
+  ): Promise<SignatureStatusResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<SignatureStatusResponse>(
+        `${API_URL}/api/reports/worker/signatures/status`,
+        request,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 403:
+            throw new Error("No tienes permisos para esta empresa.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar el estado de firmas.");
         }
       }
       throw error;

@@ -103,6 +103,18 @@ const ChangeRequestIcon = () => (
   </svg>
 );
 
+const ReportIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const SignatureIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 const PasswordIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -301,7 +313,74 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
           </div>
         </AccordionSection>
 
-        {/* 5. Cambiar contraseña */}
+        {/* 5. Consultar informes mensuales */}
+        <AccordionSection
+          title="Consultar informes mensuales"
+          icon={<ReportIcon />}
+          isOpen={openSection === "report"}
+          onToggle={() => toggleSection("report")}
+        >
+          <div className="space-y-3 text-sm">
+            <p className="text-gray-600 mb-4">
+              Consulta tus informes mensuales de jornada y descárgalos en PDF.
+            </p>
+            <Step number={1}>
+              Pulsa en <strong>"Consultar informe mensual"</strong> en el menú principal.
+            </Step>
+            <Step number={2}>
+              Selecciona la <strong>empresa</strong>, el <strong>año</strong> y el <strong>mes</strong>.
+            </Step>
+            <Step number={3}>
+              Pulsa <strong>"Generar informe"</strong> para ver el resumen.
+            </Step>
+            <Step number={4}>
+              Revisa el detalle diario pulsando en cada fila para expandirla.
+            </Step>
+            <Step number={5}>
+              Pulsa <strong>"Descargar PDF"</strong> para guardar una copia en tu dispositivo.
+            </Step>
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                <strong>Nota:</strong> El informe muestra las horas trabajadas, pausas y el
+                estado de firma del mes.
+              </p>
+            </div>
+          </div>
+        </AccordionSection>
+
+        {/* 6. Firmar registros mensuales */}
+        <AccordionSection
+          title="Firmar registros mensuales"
+          icon={<SignatureIcon />}
+          isOpen={openSection === "signature"}
+          onToggle={() => toggleSection("signature")}
+        >
+          <div className="space-y-3 text-sm">
+            <p className="text-gray-600 mb-4">
+              Firma tus registros mensuales para confirmar que son correctos.
+            </p>
+            <Step number={1}>
+              Pulsa en <strong>"Firmar registros mensuales"</strong> en el menú principal.
+            </Step>
+            <Step number={2}>
+              Selecciona la <strong>empresa</strong>.
+            </Step>
+            <Step number={3}>
+              Verás los meses pendientes de firma. Pulsa <strong>"Firmar"</strong> en el mes que quieras confirmar.
+            </Step>
+            <Step number={4}>
+              Revisa el mensaje de confirmación y pulsa <strong>"Firmar"</strong> para confirmar.
+            </Step>
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 text-sm">
+                <strong>Importante:</strong> La firma es irreversible. Asegúrate de haber revisado
+                tus registros antes de firmar. Te recomendamos consultar primero el informe mensual.
+              </p>
+            </div>
+          </div>
+        </AccordionSection>
+
+        {/* 7. Cambiar contraseña */}
         <AccordionSection
           title="Cambiar contraseña"
           icon={<PasswordIcon />}
@@ -330,7 +409,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
           </div>
         </AccordionSection>
 
-        {/* 6. Añadir a pantalla de inicio */}
+        {/* 8. Añadir a pantalla de inicio */}
         <AccordionSection
           title="Añadir a pantalla de inicio"
           icon={<PhoneIcon />}
