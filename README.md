@@ -1,3 +1,5 @@
+> 🇬🇧 [Read in English](README.en.md)
+
 # OpenJornada Webapp
 
 Aplicación web para trabajadores del sistema OpenJornada, construida con React, TypeScript y Vite.
