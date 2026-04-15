@@ -223,3 +223,20 @@ export interface SignatureStatusResponse {
   pending: SignatureMonth[];
   signed: SignatureMonth[];
 }
+
+export interface WorkerChangeRequest {
+  id: string;
+  date: string;
+  time_record_id: string;
+  original_timestamp: string;
+  original_type: 'entry' | 'exit';
+  company_id: string;
+  company_name: string;
+  new_timestamp: string;
+  reason: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  reviewed_at?: string;
+  admin_public_comment?: string;
+}
