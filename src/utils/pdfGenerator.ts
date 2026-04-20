@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { MonthlyReportResponse } from '../types';
+import { MonthlyReportResponse, ModificationEntry } from '../types';
 import { getMonthName, formatMinutesToHoursMinutes } from './dateFormatters';
 
 /**
@@ -158,6 +158,52 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
     y
   );
   y += 14;
+
+  // ─── 5b. Modifications table (only if there are any) ─────────────────
+  const allModifications: ModificationEntry[] = report.daily_details.flatMap(
+    (day) => day.modifications ?? []
+  );
+
+  if (allModifications.length > 0) {
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Historial de modificaciones', 14, y);
+    y += 8;
+
+    const modificationsBody = allModifications.map((mod) => [
+      formatDateLocal(mod.original_timestamp),
+      mod.record_type === 'entry' ? 'Entrada' : 'Salida',
+      formatTimeLocal(mod.original_timestamp),
+      formatTimeLocal(mod.new_timestamp),
+      mod.modified_by_admin_email,
+      mod.modification_reason,
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Fecha', 'Tipo', 'Hora original', 'Hora modificada', 'Aprobado por', 'Motivo']],
+      body: modificationsBody,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      bodyStyles: {
+        halign: 'center',
+      },
+      styles: {
+        fontSize: 10,
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    const modTable = (doc as unknown as { lastAutoTable: { finalY: number } })
+      .lastAutoTable;
+    y = modTable ? modTable.finalY + 14 : y + 14;
+  }
 
   // ─── 6. Footer ────────────────────────────────────────────────────────
   const now = new Date();

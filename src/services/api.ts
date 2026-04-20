@@ -23,6 +23,7 @@ import {
   MonthlySignatureRequest,
   MonthlySignatureResponse,
   SignatureStatusResponse,
+  WorkerChangeRequest,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -648,6 +649,49 @@ class ApiService {
             throw new Error("Error del servidor. Inténtalo de nuevo.");
           default:
             throw new Error("Error al cargar el estado de firmas.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getWorkerChangeRequests(
+    email: string,
+    password: string,
+    options?: { company_id?: string; status_filter?: string; limit?: number },
+  ): Promise<WorkerChangeRequest[]> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const body: Record<string, unknown> = { email, password };
+      if (options?.company_id !== undefined) body.company_id = options.company_id;
+      if (options?.status_filter !== undefined) body.status_filter = options.status_filter;
+      if (options?.limit !== undefined) body.limit = options.limit;
+
+      const response = await axios.post<WorkerChangeRequest[]>(
+        `${API_URL}/api/change-requests/worker/history`,
+        body,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 404:
+            throw new Error("Trabajador no encontrado.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar las peticiones de cambio.");
         }
       }
       throw error;

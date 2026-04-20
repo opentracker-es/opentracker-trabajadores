@@ -149,6 +149,16 @@ export interface PendingCheckResponse {
 
 // Monthly Reports (worker self-service)
 
+export interface ModificationEntry {
+  record_id: string;
+  record_type: 'entry' | 'exit';
+  original_timestamp: string;   // ISO datetime UTC
+  new_timestamp: string;        // ISO datetime UTC
+  modified_at: string;          // ISO datetime UTC
+  modified_by_admin_email: string;
+  modification_reason: string;
+}
+
 export interface MonthlyReportRequest {
   email: string;
   password: string;
@@ -172,6 +182,7 @@ export interface DaySummary {
   records_count: number;
   has_open_session: boolean;
   is_modified: boolean;
+  modifications?: ModificationEntry[];
 }
 
 export interface MonthlyReportResponse {
@@ -222,4 +233,21 @@ export interface SignatureMonth {
 export interface SignatureStatusResponse {
   pending: SignatureMonth[];
   signed: SignatureMonth[];
+}
+
+export interface WorkerChangeRequest {
+  id: string;
+  date: string;
+  time_record_id: string;
+  original_timestamp: string;
+  original_type: 'entry' | 'exit';
+  company_id: string;
+  company_name: string;
+  new_timestamp: string;
+  reason: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  reviewed_at?: string;
+  admin_public_comment?: string;
 }
