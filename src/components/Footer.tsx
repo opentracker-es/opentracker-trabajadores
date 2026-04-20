@@ -22,7 +22,7 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
           </>
         )}
         <a
-          href="https://www.opentracker.es/legal/privacidad"
+          href="https://www.openjornada.es/legal/privacidad"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-gray-700 transition-colors underline"
@@ -31,7 +31,7 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
         </a>
         <span>·</span>
         <a
-          href="https://www.opentracker.es/legal/aviso-legal"
+          href="https://www.openjornada.es/legal/aviso-legal"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-gray-700 transition-colors underline"
@@ -40,7 +40,7 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
         </a>
       </div>
       <p className="mt-2">
-        © {currentYear} OpenTracker · Licencia AGPL-3.0
+        © {currentYear} OpenJornada · Licencia AGPL-3.0
       </p>
     </footer>
   );

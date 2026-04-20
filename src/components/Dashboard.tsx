@@ -22,7 +22,7 @@ interface DashboardProps {
 
 type View = "menu" | "time-record" | "incident" | "change-request" | "my-change-requests" | "monthly-report" | "monthly-signature" | "settings" | "help";
 
-const PRIVACY_ACCEPTED_KEY = "opentracker_privacy_accepted";
+const PRIVACY_ACCEPTED_KEY = "openjornada_privacy_accepted";
 
 const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) => {
   const [currentView, setCurrentView] = useState<View>("menu");

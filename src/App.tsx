@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
@@ -15,6 +15,11 @@ function MainApp() {
   const appName = import.meta.env.VITE_APP_NAME || 'Time Tracking';
   const appLogo = import.meta.env.VITE_APP_LOGO || '';
   const navigate = useNavigate();
+
+  // Set document title with app name
+  useEffect(() => {
+    document.title = `${appName} - Registro de Jornada`;
+  }, [appName]);
 
   const [user, setUser] = useState<UserData | null>(null);
 

@@ -1,13 +1,17 @@
 {
-  "name": "opentracker-webapp",
-  "version": "1.0.0",
-  "description": "OpenTracker Worker Web App - Sistema de Registro de Jornada Laboral",
+  "name": "openjornada-webapp",
+  "version": "1.0.2",
+  "description": "OpenJornada Worker Web App - Sistema de Registro de Jornada Laboral",
   "license": "AGPL-3.0",
-  "author": "OpenTracker Contributors",
+  "author": {
+    "name": "HappyAndroids",
+    "url": "https://happyandroids.com"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/[YOUR-ORG]/opentracker"
+    "url": "https://github.com/openjornada/openjornada-trabajadores"
   },
+  "homepage": "https://www.openjornada.es",
   "private": true,
   "type": "module",
   "scripts": {
@@ -37,6 +41,7 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

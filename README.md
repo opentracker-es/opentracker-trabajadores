@@ -1,6 +1,8 @@
-# OpenTracker Webapp
+> 🇬🇧 [Read in English](README.en.md)
 
-Aplicación web para trabajadores del sistema OpenTracker, construida con React, TypeScript y Vite.
+# OpenJornada Webapp
+
+Aplicación web para trabajadores del sistema OpenJornada, construida con React, TypeScript y Vite.
 
 ## 🎯 Características
 
@@ -43,7 +45,7 @@ npm run lint
 ## 📦 Estructura del Proyecto
 
 ```
-opentracker-webapp/
+openjornada-webapp/
 ├── src/
 │   ├── components/         # Componentes React
 │   │   ├── Login.tsx      # Autenticación de trabajador
@@ -82,7 +84,7 @@ VITE_API_USERNAME=admin
 VITE_API_PASSWORD=your_password
 
 # Branding
-VITE_APP_NAME=OpenTracker
+VITE_APP_NAME=OpenJornada
 VITE_APP_LOGO=/logo.png
 ```
 
@@ -253,9 +255,9 @@ npm run build
 ```nginx
 server {
     listen 80;
-    server_name app.opentracker.com;
+    server_name app.openjornada.com;
 
-    root /path/to/opentracker-webapp/dist;
+    root /path/to/openjornada-webapp/dist;
     index index.html;
 
     location / {
@@ -270,10 +272,10 @@ La imagen oficial está disponible en GitHub Container Registry:
 
 ```bash
 # Última versión
-docker pull ghcr.io/opentracker-es/opentracker-trabajadores:latest
+docker pull ghcr.io/openjornada/openjornada-trabajadores:latest
 
 # Versión específica
-docker pull ghcr.io/opentracker-es/opentracker-trabajadores:1.0.0
+docker pull ghcr.io/openjornada/openjornada-trabajadores:1.0.0
 ```
 
 **Plataformas soportadas:** linux/amd64, linux/arm64
@@ -291,14 +293,14 @@ Estas variables se pueden cambiar **sin reconstruir la imagen**:
 | `VITE_API_URL` | URL de la API | (requerida) |
 | `VITE_API_USERNAME` | Usuario para auth JWT | (requerida) |
 | `VITE_API_PASSWORD` | Contraseña para auth JWT | (requerida) |
-| `VITE_APP_NAME` | Nombre de la aplicación | `OpenTracker` |
+| `VITE_APP_NAME` | Nombre de la aplicación | `OpenJornada` |
 | `VITE_APP_LOGO` | Ruta al logo | `/logo.png` |
 
 ```yaml
 # docker-compose.yml
 services:
   webapp:
-    image: ghcr.io/opentracker-es/opentracker-trabajadores:latest
+    image: ghcr.io/openjornada/openjornada-trabajadores:latest
     environment:
       - VITE_API_URL=https://mi-dominio.com/api
       - VITE_API_USERNAME=webapp-user
@@ -328,8 +330,8 @@ La imagen usa un `docker-entrypoint.sh` que reemplaza placeholders con los valor
 docker-compose up -d
 
 # O construir manualmente
-docker build -t opentracker-trabajadores .
-docker run -p 80:80 opentracker-trabajadores
+docker build -t openjornada-trabajadores .
+docker run -p 80:80 openjornada-trabajadores
 ```
 
 ## 🔍 Debugging
@@ -397,16 +399,21 @@ Ninguno actualmente. Reporta issues en GitHub.
 
 GNU Affero General Public License v3.0 (AGPL-3.0) - Ver archivo LICENSE en la raíz del proyecto.
 
+## 👨‍💻 Autor
+
+OpenJornada es un proyecto desarrollado por **[HappyAndroids](https://happyandroids.com)**.
+
 ## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor abre un issue antes de hacer cambios grandes.
 
 ## 🔗 Enlaces
 
-- **Sitio web**: [www.opentracker.es](https://www.opentracker.es)
-- **Email**: info@opentracker.es
+- **Sitio web**: [www.openjornada.es](https://www.openjornada.es)
+- **Desarrollado por**: [HappyAndroids](https://happyandroids.com)
+- **Email**: info@openjornada.es
 
 ---
 
-Parte del proyecto [OpenTracker](https://www.opentracker.es)
+Un proyecto de [HappyAndroids](https://happyandroids.com) | [OpenJornada](https://www.openjornada.es)
 

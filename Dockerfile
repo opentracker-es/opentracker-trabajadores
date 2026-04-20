@@ -54,7 +54,7 @@ EXPOSE 80
 ENV VITE_API_URL=""
 ENV VITE_API_USERNAME=""
 ENV VITE_API_PASSWORD=""
-ENV VITE_APP_NAME="OpenTracker"
+ENV VITE_APP_NAME="OpenJornada"
 ENV VITE_APP_LOGO="/logo.png"
 
 # Use entrypoint to replace placeholders at runtime
