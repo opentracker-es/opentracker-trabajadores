@@ -151,7 +151,7 @@ export interface PendingCheckResponse {
 
 export interface ModificationEntry {
   record_id: string;
-  record_type: string;          // "entry" | "exit"
+  record_type: 'entry' | 'exit';
   original_timestamp: string;   // ISO datetime UTC
   new_timestamp: string;        // ISO datetime UTC
   modified_at: string;          // ISO datetime UTC

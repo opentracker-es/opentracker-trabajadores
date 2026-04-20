@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import apiService from "../services/api";
 import { WorkerChangeRequest } from "../types";
 import { formatToLocalTime, formatToLocalTimeShort } from "../utils/dateFormatters";
@@ -22,6 +22,11 @@ const statusBadgeClass: Record<WorkerChangeRequest["status"], string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
+function formatDateDMY(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
   onBack,
   userEmail,
@@ -32,17 +37,13 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await apiService.getWorkerChangeRequests(userEmail, userPassword);
       const sorted = [...data].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       setRequests(sorted);
     } catch (err) {
@@ -52,12 +53,11 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userEmail, userPassword]);
 
-  const formatDate = (dateStr: string): string => {
-    const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}/${year}`;
-  };
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
 
   return (
     <div className="space-y-4">
@@ -167,6 +167,12 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                 />
               </svg>
               <span>{error}</span>
+              <button
+                onClick={loadRequests}
+                className="ml-auto text-red-700 underline text-xs flex-shrink-0"
+              >
+                Reintentar
+              </button>
             </div>
           )}
 
@@ -187,7 +193,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-gray-900">
-                          {formatDate(req.date)}
+                          {formatDateDMY(req.date)}
                         </span>
                         <span className="text-sm text-gray-500">
                           {req.original_type === "entry" ? "Entrada" : "Salida"}
