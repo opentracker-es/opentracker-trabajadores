@@ -1,3 +1,8 @@
+import {
+  SubscriptionBlockedError,
+  emitSubscriptionBlocked,
+} from './errors';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export interface WorkerLoginCredentials {
@@ -38,6 +43,17 @@ export const authService = {
         }
         if (response.status === 500) {
           throw new Error('Error del servidor. Por favor, inténtalo de nuevo más tarde.');
+        }
+        // Suscripción de la empresa inactiva (gate 402 subscription_inactive)
+        let detail: string | undefined;
+        try {
+          detail = (await response.json())?.detail;
+        } catch {
+          /* cuerpo no-JSON */
+        }
+        if (response.status === 402 || detail === 'subscription_inactive') {
+          emitSubscriptionBlocked();
+          throw new SubscriptionBlockedError();
         }
         throw new Error('Error al validar credenciales. Por favor, inténtalo de nuevo.');
       }

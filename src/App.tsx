@@ -4,6 +4,8 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import AccessDenied from './components/AccessDenied';
+import { onSubscriptionBlocked } from './services/errors';
 
 interface UserData {
   email: string;
@@ -22,6 +24,12 @@ function MainApp() {
   }, [appName]);
 
   const [user, setUser] = useState<UserData | null>(null);
+  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
+
+  // Bloqueo de suscripción: cubre ambos caminos (login vía fetch y acciones vía axios).
+  useEffect(() => {
+    return onSubscriptionBlocked(() => setSubscriptionBlocked(true));
+  }, []);
 
   const handleLogin = (email: string, password: string, workerName: string) => {
     setUser({ email, password, workerName });
@@ -40,6 +48,10 @@ function MainApp() {
   const handleBackToLogin = () => {
     navigate('/');
   };
+
+  if (subscriptionBlocked) {
+    return <AccessDenied appName={appName} />;
+  }
 
   return (
     <Routes>

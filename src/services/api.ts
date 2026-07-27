@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { emitSubscriptionBlocked } from "./errors";
 import {
   TimeRecordCredentials,
   TimeRecordResponse,
@@ -76,6 +77,15 @@ class ApiService {
             this.authenticationFailed = true;
             return Promise.reject(authError);
           }
+        }
+
+        // Suscripción de la empresa inactiva (gate 402 subscription_inactive):
+        // cubre cualquier acción posterior al login (el login usa fetch, no axios).
+        if (
+          error.response?.status === 402 ||
+          error.response?.data?.detail === "subscription_inactive"
+        ) {
+          emitSubscriptionBlocked();
         }
 
         return Promise.reject(error);
