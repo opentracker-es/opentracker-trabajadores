@@ -25,6 +25,12 @@ import {
   MonthlySignatureResponse,
   SignatureStatusResponse,
   WorkerChangeRequest,
+  AbsenceRequestCreate,
+  WorkerAbsence,
+  AbsenceBalance,
+  TeamCalendarEntry,
+  AttachmentUploadResponse,
+  AbsenceTypeOption,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -702,6 +708,301 @@ class ApiService {
             throw new Error("Error del servidor. Inténtalo de nuevo.");
           default:
             throw new Error("Error al cargar las peticiones de cambio.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ausencias y vacaciones (portal del trabajador)
+  // ---------------------------------------------------------------------------
+
+  async uploadAttachment(
+    email: string,
+    password: string,
+    company_id: string,
+    file: File,
+  ): Promise<AttachmentUploadResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("company_id", company_id);
+      formData.append("file", file);
+
+      const response = await axios.post<AttachmentUploadResponse>(
+        `${API_URL}/api/absences/attachments`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 400:
+            throw new Error("El justificante no es válido (tipo o tamaño).");
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al subir el justificante.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async createAbsenceRequest(
+    request: AbsenceRequestCreate,
+  ): Promise<WorkerAbsence> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<WorkerAbsence>(
+        `${API_URL}/api/absences/`,
+        request,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 400:
+            throw new Error("Datos inválidos. Por favor verifica tu entrada.");
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 403:
+            throw new Error("La gestión de ausencias no está activa para esta empresa.");
+          case 404:
+            throw new Error("Empresa o política de ausencias no encontrada.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al crear la solicitud de ausencia.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getWorkerAbsences(
+    email: string,
+    password: string,
+    options?: { company_id?: string; status_filter?: string; limit?: number },
+  ): Promise<WorkerAbsence[]> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const body: Record<string, unknown> = { email, password };
+      if (options?.company_id !== undefined) body.company_id = options.company_id;
+      if (options?.status_filter !== undefined) body.status_filter = options.status_filter;
+      if (options?.limit !== undefined) body.limit = options.limit;
+
+      const response = await axios.post<WorkerAbsence[]>(
+        `${API_URL}/api/absences/me`,
+        body,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 404:
+            throw new Error("Trabajador no encontrado.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar las ausencias.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getWorkerBalance(
+    email: string,
+    password: string,
+    company_id: string,
+    year?: number,
+  ): Promise<AbsenceBalance> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const body: Record<string, unknown> = { email, password, company_id };
+      if (year !== undefined) body.year = year;
+
+      const response = await axios.post<AbsenceBalance>(
+        `${API_URL}/api/absences/me/balance`,
+        body,
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 404:
+            throw new Error("Empresa o política de ausencias no encontrada.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar el saldo de vacaciones.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async cancelAbsence(
+    absenceId: string,
+    email: string,
+    password: string,
+  ): Promise<WorkerAbsence> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<WorkerAbsence>(
+        `${API_URL}/api/absences/me/${absenceId}/cancel`,
+        { email, password },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 400:
+            throw new Error("Solo se pueden cancelar solicitudes pendientes.");
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 404:
+            throw new Error("Solicitud no encontrada.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cancelar la solicitud.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getTeamCalendar(
+    email: string,
+    password: string,
+    company_id: string,
+    start_date: string,
+    end_date: string,
+  ): Promise<TeamCalendarEntry[]> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<TeamCalendarEntry[]>(
+        `${API_URL}/api/absences/me/calendar`,
+        { email, password, company_id, start_date, end_date },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 404:
+            throw new Error("Empresa no encontrada.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar el calendario de equipo.");
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getAbsenceTypes(
+    email: string,
+    password: string,
+    company_id: string,
+  ): Promise<AbsenceTypeOption[]> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.post<AbsenceTypeOption[]>(
+        `${API_URL}/api/absences/me/types`,
+        { email, password, company_id },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+
+        if (axiosError.response?.data?.detail) {
+          throw new Error(axiosError.response.data.detail);
+        }
+
+        switch (axiosError.response?.status) {
+          case 401:
+            throw new Error("Credenciales inválidas.");
+          case 403:
+            throw new Error("La gestión de ausencias no está activa para esta empresa.");
+          case 404:
+            throw new Error("Empresa no encontrada.");
+          case 500:
+            throw new Error("Error del servidor. Inténtalo de nuevo.");
+          default:
+            throw new Error("Error al cargar los tipos de ausencia.");
         }
       }
       throw error;

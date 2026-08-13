@@ -123,6 +123,13 @@ Puedes personalizar la aplicación con tu propio branding:
 - Campo de descripción con validación
 - Mensaje de confirmación al enviar
 
+### Ausencias y Vacaciones (`AbsencesSection.tsx`)
+- Solicitar ausencias/vacaciones (con medio día/horas y justificante)
+- Ver el saldo disponible en tiempo real
+- Historial propio con estado y cancelación
+- Calendario de equipo "quién está fuera"
+- La sección solo aparece si la empresa del trabajador tiene el módulo activo
+
 ### Settings (`Settings.tsx`)
 - Formulario de cambio de contraseña
 - Validación: contraseña actual, nueva contraseña (mín. 6 caracteres)

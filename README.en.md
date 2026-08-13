@@ -123,6 +123,13 @@ You can customize the application with your own branding:
 - Description field with validation
 - Confirmation message on submit
 
+### Absences and Leave (`AbsencesSection.tsx`)
+- Request absences/leave (with half-day/hours and supporting document)
+- View the available balance in real time
+- Own history with status and cancellation
+- Team calendar showing who is out
+- The section only appears if the worker's company has the module enabled
+
 ### Settings (`Settings.tsx`)
 - Password change form
 - Validation: current password, new password (min. 6 characters)
