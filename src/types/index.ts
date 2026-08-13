@@ -105,6 +105,8 @@ export interface Company {
   updated_at?: string;
   deleted_at?: string;
   deleted_by?: string;
+  // Opt-in del módulo de ausencias/vacaciones (gating de la sección en la webapp).
+  absence_management_enabled?: boolean;
 }
 
 export interface ChangeRequestCreate {
@@ -250,4 +252,93 @@ export interface WorkerChangeRequest {
   updated_at: string;
   reviewed_at?: string;
   admin_public_comment?: string;
+}
+
+// Ausencias y vacaciones (portal del trabajador)
+
+export type AbsenceStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
+export type DayPortion = 'full' | 'morning' | 'afternoon';
+
+export interface AbsenceTypeOption {
+  code: string;
+  name: string;
+  deducts_balance: boolean;
+  requires_attachment: boolean;
+  is_paid?: boolean;
+  max_days?: number | null;
+  color?: string;
+}
+
+/**
+ * Catálogo por defecto de tipos de ausencia (solo FALLBACK).
+ *
+ * El catálogo real de la empresa se obtiene vía `POST /api/absences/me/types`
+ * (`ApiService.getAbsenceTypes`). Estos valores por defecto coinciden con los
+ * 5 tipos que la API siembra en cada política nueva y solo se usan como respaldo
+ * si esa llamada falla, para no dejar el selector de tipo vacío.
+ */
+export const DEFAULT_ABSENCE_TYPES: AbsenceTypeOption[] = [
+  { code: 'vacation', name: 'Vacaciones', requires_attachment: false, deducts_balance: true },
+  { code: 'personal_matters', name: 'Asuntos propios', requires_attachment: false, deducts_balance: true },
+  { code: 'paid_leave', name: 'Permiso retribuido', requires_attachment: true, deducts_balance: false },
+  { code: 'justified_absence', name: 'Ausencia justificada', requires_attachment: true, deducts_balance: false },
+  { code: 'unjustified_absence', name: 'Ausencia no justificada', requires_attachment: false, deducts_balance: false },
+];
+
+export interface AbsenceRequestCreate {
+  email: string;
+  password: string;
+  company_id: string;
+  absence_type_code: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+  is_partial: boolean;
+  day_portion: DayPortion;
+  start_time?: string; // HH:mm
+  end_time?: string; // HH:mm
+  worker_comment?: string;
+  attachment_id?: string;
+}
+
+export interface WorkerAbsence {
+  id: string;
+  company_id: string;
+  company_name: string;
+  absence_type_code: string;
+  absence_type_name: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+  is_partial: boolean;
+  day_portion: DayPortion;
+  start_time?: string | null;
+  end_time?: string | null;
+  worker_comment?: string | null;
+  attachment_id?: string | null;
+  days_computed: number;
+  status: AbsenceStatus;
+  created_at: string;
+  updated_at: string;
+  reviewed_at?: string | null;
+  admin_public_comment?: string | null;
+}
+
+export interface AbsenceBalance {
+  year: number;
+  reference_year_mode: 'calendar' | 'hire_date';
+  period_start: string; // YYYY-MM-DD
+  period_end: string; // YYYY-MM-DD
+  total_days: number;
+  taken_days: number;
+  pending_days: number;
+  available_days: number;
+}
+
+export interface TeamCalendarEntry {
+  worker_name: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+}
+
+export interface AttachmentUploadResponse {
+  attachment_id: string;
 }
