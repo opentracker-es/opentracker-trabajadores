@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import CreateTimeRecord from "./CreateTimeRecord";
 import CreateIncident from "./CreateIncident";
 import CreateChangeRequest from "./CreateChangeRequest";
@@ -8,6 +9,7 @@ import MonthlySignature from "./MonthlySignature";
 import AbsencesSection from "./AbsencesSection";
 import Settings from "./Settings";
 import Help from "./Help";
+import InAppLanguageSelector from "./InAppLanguageSelector";
 import PrivacyModal from "./PrivacyModal";
 import Footer from "./Footer";
 import apiService from "../services/api";
@@ -27,7 +29,11 @@ type View = "menu" | "time-record" | "incident" | "change-request" | "my-change-
 
 const PRIVACY_ACCEPTED_KEY = "openjornada_privacy_accepted";
 
+const MENU_BUTTON_CLASS =
+  "w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm";
+
 const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) => {
+  const { t } = useTranslation();
   const [currentView, setCurrentView] = useState<View>("menu");
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   // Empresas del trabajador con el módulo de ausencias activo (gating opt-in, tarea 6.7).
@@ -69,19 +75,30 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
     setShowPrivacyModal(true);
   };
 
+  const handleGoTimeRecord = () => setCurrentView("time-record");
+  const handleGoIncident = () => setCurrentView("incident");
+  const handleGoChangeRequest = () => setCurrentView("change-request");
+  const handleGoMyChangeRequests = () => setCurrentView("my-change-requests");
+  const handleGoMonthlyReport = () => setCurrentView("monthly-report");
+  const handleGoMonthlySignature = () => setCurrentView("monthly-signature");
+  const handleGoAbsences = () => setCurrentView("absences");
+  const handleGoSettings = () => setCurrentView("settings");
+  const handleGoHelp = () => setCurrentView("help");
+  const handleBackToMenu = () => setCurrentView("menu");
+
   const renderContent = () => {
     switch (currentView) {
       case "time-record":
         return (
           <CreateTimeRecord
             credentials={{ email: userData.email, password: userData.password }}
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
           />
         );
       case "incident":
         return (
           <CreateIncident
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
           />
@@ -89,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       case "change-request":
         return (
           <CreateChangeRequest
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
           />
@@ -97,16 +114,16 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       case "my-change-requests":
         return (
           <MyChangeRequests
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
-            onNewRequest={() => setCurrentView("change-request")}
+            onNewRequest={handleGoChangeRequest}
           />
         );
       case "monthly-report":
         return (
           <MonthlyReport
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
           />
@@ -114,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       case "monthly-signature":
         return (
           <MonthlySignature
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
           />
@@ -122,7 +139,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       case "absences":
         return (
           <AbsencesSection
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
             userEmail={userData.email}
             userPassword={userData.password}
             companies={absenceCompanies}
@@ -133,22 +150,19 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
           <Settings
             email={userData.email}
             password={userData.password}
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
           />
         );
       case "help":
         return (
           <Help
-            onBack={() => setCurrentView("menu")}
+            onBack={handleBackToMenu}
           />
         );
       default:
         return (
           <div className="space-y-4">
-            <button
-              onClick={() => setCurrentView("time-record")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoTimeRecord} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -162,13 +176,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Crear registro de jornada
+              {t("dashboard.menu.timeRecord")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("incident")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoIncident} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -182,13 +193,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              Crear incidencia
+              {t("dashboard.menu.incident")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("change-request")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoChangeRequest} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -202,13 +210,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Petición de cambio de registro
+              {t("dashboard.menu.changeRequest")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("my-change-requests")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoMyChangeRequests} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -222,13 +227,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                 />
               </svg>
-              Mis peticiones de cambio
+              {t("dashboard.menu.myChangeRequests")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("monthly-report")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoMonthlyReport} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -242,13 +244,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              Consultar informe mensual
+              {t("dashboard.menu.monthlyReport")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("monthly-signature")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoMonthlySignature} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -262,14 +261,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Firmar registros mensuales
+              {t("dashboard.menu.monthlySignature")}
             </button>
 
             {absenceCompanies.length > 0 && (
-              <button
-                onClick={() => setCurrentView("absences")}
-                className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-              >
+              <button onClick={handleGoAbsences} className={MENU_BUTTON_CLASS}>
                 <svg
                   className="w-5 h-5 mr-3 text-blue-500"
                   fill="none"
@@ -283,14 +279,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                Ausencias y vacaciones
+                {t("dashboard.menu.absences")}
               </button>
             )}
 
-            <button
-              onClick={() => setCurrentView("settings")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoSettings} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -310,13 +303,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              Ajustes
+              {t("dashboard.menu.settings")}
             </button>
 
-            <button
-              onClick={() => setCurrentView("help")}
-              className="w-full h-16 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 rounded-lg flex items-center px-6 text-base font-medium transition-colors shadow-sm"
-            >
+            <button onClick={handleGoHelp} className={MENU_BUTTON_CLASS}>
               <svg
                 className="w-5 h-5 mr-3 text-blue-500"
                 fill="none"
@@ -330,7 +320,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                   d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Ayuda
+              {t("dashboard.menu.help")}
             </button>
           </div>
         );
@@ -346,7 +336,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
       />
 
       <div className="max-w-2xl mx-auto py-8">
-        <div className="flex justify-end mb-4">
+        {/* Chrome global: todas las vistas autenticadas se renderizan dentro de
+            Dashboard, así que el selector de idioma va aquí una sola vez. */}
+        <div className="flex items-center justify-end gap-4 mb-4">
+          <InAppLanguageSelector />
           <button
             onClick={onLogout}
             className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors"
@@ -364,14 +357,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userData, appName, onLogout }) =>
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            Cerrar sesión
+            {t("dashboard.logout")}
           </button>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="space-y-3 pb-6 pt-6 px-6 border-b border-gray-200">
             <h1 className="text-2xl font-semibold text-gray-900 text-center">
-              Registro de jornada
+              {t("dashboard.title")}
             </h1>
             <div className="text-center space-y-1">
               <p className="text-base font-medium text-gray-700">{appName}</p>

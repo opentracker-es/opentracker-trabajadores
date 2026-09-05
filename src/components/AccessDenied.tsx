@@ -1,4 +1,4 @@
-import { SUBSCRIPTION_BLOCKED_MESSAGE } from '../services/errors';
+import { useTranslation } from 'react-i18next';
 
 interface AccessDeniedProps {
   appName?: string;
@@ -9,6 +9,8 @@ interface AccessDeniedProps {
  * (respuesta 402 `subscription_inactive` de la API). Sustituye a Login/Dashboard.
  */
 function AccessDenied({ appName }: AccessDeniedProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       role="alert"
@@ -36,9 +38,9 @@ function AccessDenied({ appName }: AccessDeniedProps) {
             />
           </svg>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Acceso no disponible
+            {t('accessDenied.title')}
           </h2>
-          <p className="text-gray-600">{SUBSCRIPTION_BLOCKED_MESSAGE}</p>
+          <p className="text-gray-600">{t('accessDenied.message')}</p>
         </div>
       </div>
     </div>

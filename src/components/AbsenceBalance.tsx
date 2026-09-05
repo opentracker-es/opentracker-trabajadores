@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { AbsenceBalance as AbsenceBalanceData } from "../types";
 
@@ -16,6 +17,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
   companyId,
   refreshKey,
 }) => {
+  const { t } = useTranslation();
   const [balance, setBalance] = useState<AbsenceBalanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
       const data = await apiService.getWorkerBalance(userEmail, userPassword, companyId);
       setBalance(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar el saldo");
+      setError(err instanceof Error ? err.message : t("absences.balance.loadError"));
     } finally {
       setLoading(false);
     }
@@ -37,12 +39,12 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
     loadBalance();
   }, [loadBalance, refreshKey]);
 
-  const stats: { label: string; value: number; className: string }[] = balance
+  const stats: { key: string; label: string; value: number; className: string }[] = balance
     ? [
-        { label: "Total", value: balance.total_days, className: "text-gray-900" },
-        { label: "Disfrutado", value: balance.taken_days, className: "text-green-700" },
-        { label: "Pendiente", value: balance.pending_days, className: "text-yellow-700" },
-        { label: "Disponible", value: balance.available_days, className: "text-blue-700" },
+        { key: "total", label: t("absences.balance.total"), value: balance.total_days, className: "text-gray-900" },
+        { key: "taken", label: t("absences.balance.taken"), value: balance.taken_days, className: "text-green-700" },
+        { key: "pending", label: t("absences.balance.pending"), value: balance.pending_days, className: "text-yellow-700" },
+        { key: "available", label: t("absences.balance.available"), value: balance.available_days, className: "text-blue-700" },
       ]
     : [];
 
@@ -63,7 +65,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
               d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
             />
           </svg>
-          Saldo de vacaciones
+          {t("absences.balance.title")}
           {balance && (
             <span className="ml-2 text-sm font-normal text-gray-500">({balance.year})</span>
           )}
@@ -72,8 +74,8 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
           <button
             onClick={loadBalance}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            title="Actualizar saldo"
-            aria-label="Actualizar saldo"
+            title={t("absences.balance.refresh")}
+            aria-label={t("absences.balance.refresh")}
           >
             <svg
               className="w-5 h-5"
@@ -115,7 +117,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Cargando...
+            {t("common.loading")}
           </div>
         )}
 
@@ -129,7 +131,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
               onClick={loadBalance}
               className="ml-auto text-red-700 underline text-xs flex-shrink-0"
             >
-              Reintentar
+              {t("common.retry")}
             </button>
           </div>
         )}
@@ -138,7 +140,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {stats.map((stat) => (
               <div
-                key={stat.label}
+                key={stat.key}
                 className="border border-gray-200 rounded-lg p-3 text-center"
               >
                 <p className={`text-2xl font-semibold ${stat.className}`}>{stat.value}</p>

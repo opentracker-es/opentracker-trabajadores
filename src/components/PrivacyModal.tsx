@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans, useTranslation } from "react-i18next";
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -6,7 +7,11 @@ interface PrivacyModalProps {
   companyName: string;
 }
 
+const STRONG_MAP = { 1: <strong />, 2: <strong /> };
+
 const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onAccept, companyName }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -31,59 +36,55 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onAccept, companyNa
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Información sobre protección de datos
+                {t("privacy.title")}
               </h2>
               <p className="text-sm text-gray-600">
-                Registro de jornada laboral
+                {t("privacy.subtitle")}
               </p>
             </div>
           </div>
 
           <div className="space-y-4 text-sm text-gray-700">
             <p>
-              De acuerdo con el <strong>Reglamento General de Protección de Datos (RGPD)</strong> y
-              la <strong>Ley Orgánica 3/2018 de Protección de Datos Personales</strong>, te informamos:
+              <Trans i18nKey="privacy.intro" components={STRONG_MAP} />
             </p>
 
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Responsable:</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.responsible")}</span>
                 <span>{companyName}</span>
               </div>
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Finalidad:</span>
-                <span>Registro de tu jornada laboral conforme al artículo 34.9 del Estatuto de los Trabajadores.</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.purpose")}</span>
+                <span>{t("privacy.purposeText")}</span>
               </div>
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Base legal:</span>
-                <span>Cumplimiento de obligación legal (Art. 6.1.c RGPD).</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.legalBasis")}</span>
+                <span>{t("privacy.legalBasisText")}</span>
               </div>
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Datos tratados:</span>
-                <span>Nombre, email, registros de entrada/salida y pausas.</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.dataLabel")}</span>
+                <span>{t("privacy.dataText")}</span>
               </div>
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Conservación:</span>
-                <span>Mínimo 4 años según la legislación laboral vigente.</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.retentionLabel")}</span>
+                <span>{t("privacy.retentionText")}</span>
               </div>
               <div className="flex gap-3">
-                <span className="font-semibold text-gray-900 min-w-[120px]">Destinatarios:</span>
-                <span>Inspección de Trabajo y autoridades competentes cuando lo requieran.</span>
+                <span className="font-semibold text-gray-900 min-w-[120px]">{t("privacy.recipientsLabel")}</span>
+                <span>{t("privacy.recipientsText")}</span>
               </div>
             </div>
 
             <div className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
-              <p className="font-medium text-blue-900">Tus derechos</p>
+              <p className="font-medium text-blue-900">{t("privacy.rightsTitle")}</p>
               <p className="text-blue-800 mt-1">
-                Puedes ejercer tus derechos de acceso, rectificación, supresión, portabilidad,
-                limitación y oposición contactando con el departamento de Recursos Humanos de tu empresa.
+                {t("privacy.rightsText")}
               </p>
             </div>
 
             <p className="text-gray-600 text-xs">
-              El registro de jornada es una obligación legal de tu empleador. No se requiere tu
-              consentimiento para este tratamiento, pero tienes derecho a ser informado sobre cómo
-              se gestionan tus datos.
+              {t("privacy.noteText")}
             </p>
           </div>
 
@@ -92,11 +93,10 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onAccept, companyNa
               onClick={onAccept}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
-              He leído y entendido la información
+              {t("privacy.accept")}
             </button>
             <p className="text-xs text-gray-500 text-center mt-3">
-              Esta información se mostrará solo una vez. Puedes consultarla en cualquier momento
-              desde los ajustes de tu perfil.
+              {t("privacy.acceptNote")}
             </p>
           </div>
         </div>

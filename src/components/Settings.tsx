@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
+import { getWorkerLanguagePref, applyProfileLanguage, applyExplicitChoice, type WorkerLocaleProfile } from "../i18n/language";
+import { isSupportedLocale, type SupportedLocale } from "../i18n/config";
+import { activeLocale } from "../i18n";
+import { isSessionLanguageLocked } from "../i18n/sessionLanguage";
 
 interface SettingsProps {
   email: string;
@@ -7,13 +12,59 @@ interface SettingsProps {
   onBack: () => void;
 }
 
+const AUTO_CHOICE = "auto";
+
+type LanguageChoice = SupportedLocale | typeof AUTO_CHOICE;
+
 const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- Idioma de la interfaz (tarea 8.4: selector autoservicio del worker) ---
+  // Con bloqueo de sesión (cambio rápido in-app) se muestra el idioma
+  // efectivo, no la preferencia del servidor; si difieren, el flujo de guardado
+  // (contraseña) queda listo para persistir el idioma actual en el perfil.
+  const [langChoice, setLangChoice] = useState<LanguageChoice>(
+    isSessionLanguageLocked()
+      ? activeLocale()
+      : getWorkerLanguagePref() ?? AUTO_CHOICE,
+  );
+  const [langPassword, setLangPassword] = useState("");
+  const [langSaving, setLangSaving] = useState(false);
+  const [langSuccess, setLangSuccess] = useState(false);
+  const [langError, setLangError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Lee el perfil para saber si hay preferencia explícita (`language`) y el
+    // idioma de la empresa (`notification_language`, solo herencia: la webapp
+    // del trabajador NO edita el idioma de notificaciones de la empresa).
+    let active = true;
+    apiService
+      .getWorkerProfile(email, password)
+      .then(async (p) => {
+        await applyProfileLanguage(p);
+        if (!active) return;
+        setLangChoice(
+          isSessionLanguageLocked()
+            ? activeLocale()
+            : isSupportedLocale(p.language)
+              ? p.language
+              : AUTO_CHOICE,
+        );
+      })
+      .catch(() => {
+        // Sin perfil (p. ej. offline): el selector sigue operativo; la cadena
+        // de herencia se re-resolverá al iniciar sesión de nuevo.
+      });
+    return () => {
+      active = false;
+    };
+  }, [email, password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,27 +73,27 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
 
     // Validaciones en el cliente
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError("Todos los campos son obligatorios.");
+      setError(t("settings.fieldsRequired"));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError("La nueva contraseña debe tener al menos 6 caracteres.");
+      setError(t("settings.tooShort"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("settings.mismatch"));
       return;
     }
 
     if (currentPassword !== password) {
-      setError("La contraseña actual no es correcta.");
+      setError(t("settings.wrongCurrent"));
       return;
     }
 
     if (currentPassword === newPassword) {
-      setError("La nueva contraseña debe ser diferente de la actual.");
+      setError(t("settings.sameAsCurrent"));
       return;
     }
 
@@ -68,10 +119,56 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al cambiar la contraseña. Inténtalo de nuevo.";
+          : t("settings.changeError");
       setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as LanguageChoice;
+    setLangChoice(value);
+    setLangError(null);
+    setLangSuccess(false);
+    setLangPassword("");
+  };
+
+  const langDirty =
+    langChoice !== (getWorkerLanguagePref() ?? AUTO_CHOICE);
+
+  const handleSaveLanguage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLangError(null);
+    setLangSuccess(false);
+
+    if (!langPassword) {
+      setLangError(t("settings.language.confirm"));
+      return;
+    }
+
+    setLangSaving(true);
+    try {
+      const choice = langChoice === AUTO_CHOICE ? null : langChoice;
+      const response = await apiService.updateWorkerLanguage(
+        email,
+        langPassword,
+        choice,
+      );
+      const newProfile: WorkerLocaleProfile = {
+        language: response.language,
+        notification_language: response.notification_language,
+      };
+      await applyExplicitChoice(choice, newProfile);
+      setLangPassword("");
+      setLangSuccess(true);
+      setTimeout(() => setLangSuccess(false), 5000);
+    } catch (err) {
+      setLangError(
+        err instanceof Error ? err.message : t("settings.language.error"),
+      );
+    } finally {
+      setLangSaving(false);
     }
   };
 
@@ -95,7 +192,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -120,7 +217,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            Ajustes
+            {t("settings.title")}
           </h3>
         </div>
 
@@ -128,7 +225,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
           {/* Account Information */}
           <div className="border-b border-gray-200 pb-4">
             <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Información de la cuenta
+              {t("settings.accountInfo")}
             </h4>
             <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
               <svg
@@ -145,15 +242,92 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                 />
               </svg>
               <span className="truncate">
-                <span className="font-medium">Email:</span> {email}
+                <span className="font-medium">{t("settings.emailLabel")}</span> {email}
               </span>
             </div>
           </div>
 
+          {/* Language Form */}
+          <form onSubmit={handleSaveLanguage} className="border-b border-gray-200 pb-6">
+            <h4 className="text-sm font-medium text-gray-700 mb-4">
+              {t("settings.language.title")}
+            </h4>
+            <p className="text-sm text-gray-600 mb-1">
+              {t("settings.language.description")}
+            </p>
+            <p className="text-xs text-gray-500 mb-3">
+              {t("settings.language.sessionNote")}
+            </p>
+
+            <select
+              value={langChoice}
+              onChange={handleLangChange}
+              disabled={langSaving}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 mb-3"
+            >
+              <option value={AUTO_CHOICE}>{t("settings.language.auto")}</option>
+              <option value="es">{t("settings.language.es")}</option>
+              <option value="en">{t("settings.language.en")}</option>
+              <option value="ca">{t("settings.language.ca")}</option>
+            </select>
+
+            {langDirty && (
+              <div className="space-y-3">
+                <div>
+                  <label
+                    htmlFor="language-password"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    {t("settings.language.confirm")}
+                  </label>
+                  <input
+                    type="password"
+                    id="language-password"
+                    autoComplete="current-password"
+                    value={langPassword}
+                    onChange={(e) => setLangPassword(e.target.value)}
+                    placeholder={t("settings.language.passwordPlaceholder")}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                    disabled={langSaving}
+                    required
+                  />
+                </div>
+
+                {langError && (
+                  <div
+                    className="p-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200"
+                    role="alert"
+                  >
+                    {langError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={langSaving || !langPassword}
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed w-full transition-colors"
+                >
+                  {langSaving
+                    ? t("settings.language.saving")
+                    : t("settings.language.save")}
+                </button>
+              </div>
+            )}
+
+            {langSuccess && (
+              <div
+                className="mt-3 p-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200"
+                role="status"
+              >
+                {t("settings.language.success")}
+              </div>
+            )}
+          </form>
+
           {/* Change Password Form */}
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-4">
-              Cambiar contraseña
+              {t("settings.changePassword")}
             </h4>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -161,7 +335,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   htmlFor="current-password"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Contraseña actual
+                  {t("settings.currentPassword")}
                 </label>
                 <input
                   type="password"
@@ -169,7 +343,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                  placeholder="Ingresa tu contraseña actual"
+                  placeholder={t("settings.currentPasswordPlaceholder")}
                   disabled={loading}
                   required
                 />
@@ -180,7 +354,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   htmlFor="new-password"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Nueva contraseña
+                  {t("settings.newPassword")}
                 </label>
                 <input
                   type="password"
@@ -188,7 +362,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t("settings.newPasswordPlaceholder")}
                   disabled={loading}
                   required
                 />
@@ -199,7 +373,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   htmlFor="confirm-password"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Confirmar nueva contraseña
+                  {t("settings.confirmPassword")}
                 </label>
                 <input
                   type="password"
@@ -207,7 +381,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                  placeholder="Repite la nueva contraseña"
+                  placeholder={t("settings.confirmPasswordPlaceholder")}
                   disabled={loading}
                   required
                 />
@@ -230,8 +404,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                     />
                   </svg>
                   <span>
-                    Contraseña cambiada correctamente. La próxima vez que
-                    inicies sesión, usa tu nueva contraseña.
+                    {t("settings.success")}
                   </span>
                 </div>
               )}
@@ -270,10 +443,10 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                     />
                   </svg>
                   <div className="text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Requisitos de contraseña</p>
+                    <p className="font-semibold mb-1">{t("settings.requirementsTitle")}</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Mínimo 6 caracteres</li>
-                      <li>Debe ser diferente de la contraseña actual</li>
+                      <li>{t("settings.requirementMin")}</li>
+                      <li>{t("settings.requirementDifferent")}</li>
                     </ul>
                   </div>
                 </div>
@@ -306,7 +479,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Cambiando contraseña...
+                    {t("settings.submitting")}
                   </>
                 ) : (
                   <>
@@ -323,7 +496,7 @@ const Settings: React.FC<SettingsProps> = ({ email, password, onBack }) => {
                         d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
                       />
                     </svg>
-                    Cambiar contraseña
+                    {t("settings.submit")}
                   </>
                 )}
               </button>

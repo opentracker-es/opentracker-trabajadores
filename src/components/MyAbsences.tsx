@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { WorkerAbsence, AbsenceStatus } from "../types";
 import { formatToLocalTime } from "../utils/dateFormatters";
@@ -11,24 +12,11 @@ interface MyAbsencesProps {
   onNewRequest?: () => void;
 }
 
-const statusLabel: Record<AbsenceStatus, string> = {
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-  cancelled: "Cancelada",
-};
-
 const statusBadgeClass: Record<AbsenceStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
   cancelled: "bg-gray-100 text-gray-700",
-};
-
-const dayPortionLabel: Record<string, string> = {
-  full: "Día completo",
-  morning: "Mañana",
-  afternoon: "Tarde",
 };
 
 function formatDateDMY(dateStr: string): string {
@@ -47,10 +35,24 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
   companyId,
   onNewRequest,
 }) => {
+  const { t } = useTranslation();
   const [absences, setAbsences] = useState<WorkerAbsence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const statusLabel: Record<AbsenceStatus, string> = {
+    pending: t("absences.status.pending"),
+    accepted: t("absences.status.accepted"),
+    rejected: t("absences.status.rejected"),
+    cancelled: t("absences.status.cancelled"),
+  };
+
+  const dayPortionLabel: Record<string, string> = {
+    full: t("absences.portion.full"),
+    morning: t("absences.portion.morning"),
+    afternoon: t("absences.portion.afternoon"),
+  };
 
   const loadAbsences = useCallback(async () => {
     setLoading(true);
@@ -64,10 +66,11 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
       );
       setAbsences(sorted);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar las ausencias");
+      setError(err instanceof Error ? err.message : t("absences.list.loadError"));
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, userPassword, companyId]);
 
   useEffect(() => {
@@ -81,7 +84,7 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
       await apiService.cancelAbsence(id, userEmail, userPassword);
       await loadAbsences();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cancelar la solicitud");
+      setError(err instanceof Error ? err.message : t("absences.list.cancelError"));
     } finally {
       setCancellingId(null);
     }
@@ -107,7 +110,7 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Volver
+          {t("common.back")}
         </button>
 
         <button
@@ -127,7 +130,7 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          Nueva solicitud
+          {t("absences.list.new")}
         </button>
       </div>
 
@@ -147,7 +150,7 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            Mis ausencias
+            {t("absences.list.title")}
           </h3>
         </div>
 
@@ -174,7 +177,7 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Cargando...
+              {t("common.loading")}
             </div>
           )}
 
@@ -199,14 +202,14 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
                 onClick={loadAbsences}
                 className="ml-auto text-red-700 underline text-xs flex-shrink-0"
               >
-                Reintentar
+                {t("common.retry")}
               </button>
             </div>
           )}
 
           {!loading && !error && absences.length === 0 && (
             <p className="text-gray-500 text-sm text-center py-8">
-              No tienes solicitudes de ausencia registradas.
+              {t("absences.list.empty")}
             </p>
           )}
 
@@ -233,19 +236,19 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
                         )}
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        {abs.days_computed}{" "}
-                        {abs.days_computed === 1 ? "día" : "días"}
+                        {t("absences.list.days", { count: abs.days_computed })}
                         {" · "}
                         {abs.company_name}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        Enviada el{" "}
-                        {formatToLocalTime(abs.created_at, {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        {t("absences.list.sentOn", {
+                          datetime: formatToLocalTime(abs.created_at, {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }),
                         })}
                       </p>
                     </div>
@@ -284,7 +287,9 @@ const MyAbsences: React.FC<MyAbsencesProps> = ({
                         disabled={cancellingId === abs.id}
                         className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {cancellingId === abs.id ? "Cancelando..." : "Cancelar solicitud"}
+                        {cancellingId === abs.id
+                          ? t("absences.list.cancelling")
+                          : t("absences.list.cancelRequest")}
                       </button>
                     </div>
                   )}

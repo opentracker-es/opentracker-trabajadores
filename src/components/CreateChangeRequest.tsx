@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { Company, TimeRecordResponse, ChangeRequestCreate } from "../types";
 import { formatForDatetimeLocalInput, datetimeLocalToUTC, formatToLocalTimeShort } from "../utils/dateFormatters";
@@ -14,6 +15,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
   userEmail,
   userPassword,
 }) => {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState("");
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
@@ -33,6 +35,11 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
     checkPendingRequest();
   }, []);
 
+  // Load companies when component mounts
+  useEffect(() => {
+    loadCompanies();
+  }, []);
+
   const checkPendingRequest = async () => {
     try {
       const response = await apiService.checkPendingChangeRequest(
@@ -45,11 +52,6 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       console.error("Error checking pending requests:", err);
     }
   };
-
-  // Load companies when component mounts
-  useEffect(() => {
-    loadCompanies();
-  }, []);
 
   const loadCompanies = async () => {
     try {
@@ -66,7 +68,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al cargar las empresas";
+          : t("common.loadCompaniesError");
       setError(errorMessage);
     } finally {
       setLoadingCompanies(false);
@@ -96,7 +98,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       setDayRecords(records);
 
       if (records.length === 0) {
-        setError("No hay registros para la fecha seleccionada.");
+        setError(t("changeRequests.noRecordsForDate"));
       } else {
         setError(null);
       }
@@ -104,7 +106,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al cargar los registros del día";
+          : t("changeRequests.loadDayRecordsError");
       setError(errorMessage);
       setDayRecords([]);
     } finally {
@@ -131,27 +133,27 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
 
     // Validation
     if (!selectedDate) {
-      setError("Por favor, selecciona una fecha.");
+      setError(t("changeRequests.selectDate"));
       return;
     }
 
     if (!selectedCompanyId) {
-      setError("Por favor, selecciona una empresa.");
+      setError(t("changeRequests.selectCompany"));
       return;
     }
 
     if (!selectedRecordId) {
-      setError("Por favor, selecciona un registro.");
+      setError(t("changeRequests.selectRecordRequired"));
       return;
     }
 
     if (!newDatetime) {
-      setError("Por favor, ingresa la nueva fecha y hora.");
+      setError(t("changeRequests.enterNewDatetime"));
       return;
     }
 
     if (reason.trim().length < 10) {
-      setError("El motivo debe tener al menos 10 caracteres.");
+      setError(t("changeRequests.reasonMin"));
       return;
     }
 
@@ -163,7 +165,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
 
       if (newDate.getTime() === originalDate.getTime()) {
         setError(
-          "La nueva fecha y hora debe ser diferente a la actual."
+          t("changeRequests.datetimeUnchanged")
         );
         return;
       }
@@ -200,7 +202,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al crear la petición de cambio";
+          : t("changeRequests.createError");
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -208,7 +210,10 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
   };
 
   const getRecordDisplay = (record: TimeRecordResponse): string => {
-    const type = record.record_type === "entry" ? "Entrada" : "Salida";
+    const type =
+      record.record_type === "entry"
+        ? t("timeRecord.recordType.entry")
+        : t("timeRecord.recordType.exit");
     if (!record.timestamp) return type;
 
     // Format only hour:minute in local timezone
@@ -236,7 +241,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -255,7 +260,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Petición de cambio de registro
+            {t("changeRequests.title")}
           </h3>
         </div>
 
@@ -273,8 +278,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               />
             </svg>
             <span>
-              Ya tienes una petición pendiente. Espera a que sea revisada antes
-              de crear una nueva.
+              {t("changeRequests.pendingWarning")}
             </span>
           </div>
         )}
@@ -285,7 +289,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               htmlFor="date"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Fecha del registro
+              {t("changeRequests.dateLabel")}
             </label>
             <input
               type="date"
@@ -297,7 +301,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               required
             />
             <p className="mt-2 text-sm text-gray-500">
-              Selecciona la fecha del registro que deseas modificar.
+              {t("changeRequests.dateHelp")}
             </p>
           </div>
 
@@ -306,7 +310,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               htmlFor="company"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Empresa
+              {t("common.company")}
             </label>
             <select
               id="company"
@@ -318,8 +322,8 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
             >
               <option value="">
                 {loadingCompanies
-                  ? "Cargando empresas..."
-                  : "Selecciona una empresa"}
+                  ? t("common.loadingCompanies")
+                  : t("common.selectCompany")}
               </option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>
@@ -328,7 +332,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               ))}
             </select>
             <p className="mt-2 text-sm text-gray-500">
-              La empresa a la que pertenece el registro.
+              {t("changeRequests.companyHelp")}
             </p>
           </div>
 
@@ -339,7 +343,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                   htmlFor="record"
                   className="block text-gray-700 text-sm font-bold mb-2"
                 >
-                  Registro del día
+                  {t("changeRequests.recordLabel")}
                 </label>
                 <select
                   id="record"
@@ -356,10 +360,10 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                 >
                   <option value="">
                     {loadingRecords
-                      ? "Cargando registros..."
+                      ? t("changeRequests.loadingRecords")
                       : dayRecords.length === 0
-                      ? "No hay registros"
-                      : "Selecciona un registro"}
+                      ? t("changeRequests.noRecords")
+                      : t("changeRequests.selectRecord")}
                   </option>
                   {dayRecords.map((record) => (
                     <option key={record.id} value={record.id}>
@@ -368,7 +372,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                   ))}
                 </select>
                 <p className="mt-2 text-sm text-gray-500">
-                  El registro que deseas cambiar.
+                  {t("changeRequests.recordHelp")}
                 </p>
               </div>
 
@@ -378,7 +382,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                     htmlFor="new-datetime"
                     className="block text-gray-700 text-sm font-bold mb-2"
                   >
-                    Nueva fecha y hora
+                    {t("changeRequests.newDatetimeLabel")}
                   </label>
                   <input
                     type="datetime-local"
@@ -390,7 +394,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                     required
                   />
                   <p className="mt-2 text-sm text-gray-500">
-                    La fecha y hora a la que deseas cambiar el registro.
+                    {t("changeRequests.newDatetimeHelp")}
                   </p>
                 </div>
               )}
@@ -402,21 +406,21 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
               htmlFor="reason"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Motivo del cambio
+              {t("changeRequests.reasonLabel")}
             </label>
             <textarea
               id="reason"
               name="reason"
               rows={8}
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 resize-none"
-              placeholder="Explica por qué necesitas cambiar este registro (mínimo 10 caracteres)..."
+              placeholder={t("changeRequests.reasonPlaceholder")}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={loading || hasPending}
               required
             />
             <p className="mt-2 text-sm text-gray-500">
-              Proporciona una explicación clara del motivo del cambio.
+              {t("changeRequests.reasonHelp")}
             </p>
           </div>
 
@@ -435,7 +439,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span className="truncate">Trabajador: {userEmail}</span>
+              <span className="truncate">{t("changeRequests.workerWithEmail", { email: userEmail })}</span>
             </div>
           </div>
 
@@ -456,8 +460,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                 />
               </svg>
               <span>
-                Petición enviada correctamente. Será revisada por un
-                administrador.
+                {t("changeRequests.success")}
               </span>
             </div>
           )}
@@ -510,7 +513,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Enviando petición...
+                  {t("changeRequests.submitting")}
                 </>
               ) : (
                 <>
@@ -527,7 +530,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
                       d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                     />
                   </svg>
-                  Enviar petición
+                  {t("changeRequests.submit")}
                 </>
               )}
             </button>

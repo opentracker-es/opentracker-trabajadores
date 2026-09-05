@@ -1,10 +1,11 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+import i18n from "../i18n";
 import { emitSubscriptionBlocked } from "./errors";
+import { getApiErrorMessage } from "./errorMessages";
 import {
   TimeRecordCredentials,
   TimeRecordResponse,
   TokenResponse,
-  ApiError,
   IncidentCredentials,
   IncidentResponse,
   ChangePasswordRequest,
@@ -31,6 +32,8 @@ import {
   TeamCalendarEntry,
   AttachmentUploadResponse,
   AbsenceTypeOption,
+  WorkerProfileResponse,
+  WorkerLanguageResponse,
 } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -125,17 +128,9 @@ class ApiService {
       this.authenticationFailed = true;
 
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.status === 401) {
+        if (error.response?.status === 401) {
           throw new Error(
             "API authentication failed. Please check VITE_API_USERNAME and VITE_API_PASSWORD in your .env file.",
-          );
-        }
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(
-            `API authentication failed: ${axiosError.response.data.detail}`,
           );
         }
       }
@@ -144,6 +139,15 @@ class ApiService {
         "Failed to authenticate with API. Please check your configuration.",
       );
     }
+  }
+
+  /**
+   * Every API method funnels failures through here: `getApiErrorMessage`
+   * applies the error_code -> catalog -> detail.message -> plain detail ->
+   * status/network generic chain (task 9.2).
+   */
+  private apiError(error: unknown): Error {
+    return new Error(getApiErrorMessage(error));
   }
 
   async createTimeRecord(
@@ -165,33 +169,11 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.status === 401 && this.authenticationFailed) {
-          throw new Error(
-            "Unable to connect to API. Please contact the administrator.",
-          );
-        }
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("Bad request. Please check your input.");
-          case 401:
-            throw new Error("Invalid worker credentials.");
-          case 404:
-            throw new Error("Worker not found.");
-          case 500:
-            throw new Error("Server error. Please try again later.");
-          default:
-            throw new Error("An unexpected error occurred.");
-        }
+      if (axios.isAxiosError(error) && error.response?.status === 401 && this.authenticationFailed) {
+        // API tenant credentials failed: message for the worker's admin contact.
+        throw new Error(i18n.t("errors.network.admin"));
       }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -209,33 +191,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.status === 401 && this.authenticationFailed) {
-          throw new Error(
-            "Unable to connect to API. Please contact the administrator.",
-          );
-        }
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("Bad request. Please check your input.");
-          case 401:
-            throw new Error("Invalid worker credentials.");
-          case 404:
-            throw new Error("Worker not found.");
-          case 500:
-            throw new Error("Server error. Please try again later.");
-          default:
-            throw new Error("An unexpected error occurred.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -253,25 +209,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("La nueva contraseña no es válida.");
-          case 401:
-            throw new Error("Contraseña actual incorrecta.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error inesperado al cambiar la contraseña.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -289,23 +227,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 429:
-            throw new Error("Demasiados intentos. Por favor, espera una hora.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al procesar la solicitud.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -323,23 +245,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("El enlace de recuperación es inválido o ha expirado.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al restablecer la contraseña.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -358,23 +264,55 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
+      throw this.apiError(error);
+    }
+  }
 
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
+  /**
+   * Perfil del propio trabajador (incluye `language` y `notification_language`
+   * para resolver el idioma de la UI — ver `src/i18n/language.ts`).
+   */
+  async getWorkerProfile(
+    email: string,
+    password: string,
+  ): Promise<WorkerProfileResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
 
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar las empresas.");
-        }
-      }
-      throw error;
+    try {
+      const response = await axios.post<WorkerProfileResponse>(
+        `${API_URL}/api/workers/me`,
+        { email, password },
+      );
+      return response.data;
+    } catch (error) {
+      throw this.apiError(error);
+    }
+  }
+
+  /**
+   * Autoservicio de idioma del trabajador (`PATCH /api/workers/language`).
+   * Autentica con email + contraseña (sin JWT, igual que change-password).
+   * `language = null` restablece la preferencia ("Automático").
+   */
+  async updateWorkerLanguage(
+    email: string,
+    password: string,
+    language: string | null,
+  ): Promise<WorkerLanguageResponse> {
+    if (!this.token) {
+      await this.authenticate();
+    }
+
+    try {
+      const response = await axios.patch<WorkerLanguageResponse>(
+        `${API_URL}/api/workers/language`,
+        { email, password, language },
+      );
+      return response.data;
+    } catch (error) {
+      throw this.apiError(error);
     }
   }
 
@@ -394,23 +332,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar los tipos de pausa.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -433,23 +355,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar el estado actual.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -464,25 +370,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Trabajador no encontrado.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al verificar peticiones pendientes.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -496,27 +384,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("Datos inválidos. Por favor verifica tu entrada.");
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Registro no encontrado o no pertenece a este trabajador.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al crear la petición de cambio.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -539,25 +407,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Trabajador o empresa no encontrados.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar los registros del día.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -575,25 +425,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 403:
-            throw new Error("No tienes permisos para acceder a los datos de esta empresa.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar el informe mensual.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -611,27 +443,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 403:
-            throw new Error("No tienes permisos para esta empresa.");
-          case 409:
-            throw new Error("Este mes ya fue firmado anteriormente.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al firmar el informe mensual.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -649,25 +461,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 403:
-            throw new Error("No tienes permisos para esta empresa.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar el estado de firmas.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -692,25 +486,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Trabajador no encontrado.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar las peticiones de cambio.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -742,25 +518,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("El justificante no es válido (tipo o tamaño).");
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al subir el justificante.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -778,29 +536,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("Datos inválidos. Por favor verifica tu entrada.");
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 403:
-            throw new Error("La gestión de ausencias no está activa para esta empresa.");
-          case 404:
-            throw new Error("Empresa o política de ausencias no encontrada.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al crear la solicitud de ausencia.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -825,25 +561,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Trabajador no encontrado.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar las ausencias.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -867,25 +585,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Empresa o política de ausencias no encontrada.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar el saldo de vacaciones.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -905,27 +605,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 400:
-            throw new Error("Solo se pueden cancelar solicitudes pendientes.");
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Solicitud no encontrada.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cancelar la solicitud.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -947,25 +627,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 404:
-            throw new Error("Empresa no encontrada.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar el calendario de equipo.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 
@@ -985,27 +647,7 @@ class ApiService {
       );
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-
-        if (axiosError.response?.data?.detail) {
-          throw new Error(axiosError.response.data.detail);
-        }
-
-        switch (axiosError.response?.status) {
-          case 401:
-            throw new Error("Credenciales inválidas.");
-          case 403:
-            throw new Error("La gestión de ausencias no está activa para esta empresa.");
-          case 404:
-            throw new Error("Empresa no encontrada.");
-          case 500:
-            throw new Error("Error del servidor. Inténtalo de nuevo.");
-          default:
-            throw new Error("Error al cargar los tipos de ausencia.");
-        }
-      }
-      throw error;
+      throw this.apiError(error);
     }
   }
 

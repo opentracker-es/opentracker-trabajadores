@@ -42,8 +42,14 @@ export interface WorkerCurrentStatus {
   pause_duration_minutes?: number;
 }
 
+/** `{ error_code, message }` object from migrated endpoints; plain string from legacy ones. */
+export interface ApiErrorDetailObject {
+  error_code: string;
+  message: string;
+}
+
 export interface ApiError {
-  detail: string;
+  detail: string | ApiErrorDetailObject | Array<{ msg?: string }>;
 }
 
 export interface TokenResponse {
@@ -107,6 +113,36 @@ export interface Company {
   deleted_by?: string;
   // Opt-in del módulo de ausencias/vacaciones (gating de la sección en la webapp).
   absence_management_enabled?: boolean;
+  // Idioma de notificaciones de la empresa (fuente de herencia del locale UI).
+  notification_language?: string;
+}
+
+// Idioma de la webapp (contrato i18n: es | en | ca, null = heredar de la empresa)
+
+export interface WorkerProfileResponse {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  default_timezone: string;
+  company_ids: string[];
+  company_names: string[];
+  language: string | null;
+  notification_language: string;
+}
+
+export interface WorkerLanguageUpdate {
+  email: string;
+  password: string;
+  /** null = "Automático" (hereda el idioma de notificaciones de la empresa). */
+  language: string | null;
+}
+
+export interface WorkerLanguageResponse {
+  language: string | null;
+  notification_language: string;
+  effective_language: string;
 }
 
 export interface ChangeRequestCreate {

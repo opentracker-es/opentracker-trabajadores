@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 
 interface HelpProps {
   onBack: () => void;
@@ -151,12 +152,35 @@ const AddToHomeIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
+// Marcado <1>/<2>/<3> de los catálogos -> <strong/>
+const BOLD_COMPONENTS: { [tagName: string]: React.ReactElement } = {
+  1: <strong />,
+  2: <strong />,
+  3: <strong />,
+};
+
+type TransProps = { i18nKey: string };
+
+const BoldTrans: React.FC<TransProps> = ({ i18nKey }) => (
+  <Trans i18nKey={i18nKey} components={BOLD_COMPONENTS} />
+);
+
 const Help: React.FC<HelpProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const [openSection, setOpenSection] = useState<string | null>("install");
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
+
+  const handleToggleLogin = () => toggleSection("login");
+  const handleToggleTime = () => toggleSection("time");
+  const handleToggleIncident = () => toggleSection("incident");
+  const handleToggleChange = () => toggleSection("change");
+  const handleToggleReport = () => toggleSection("report");
+  const handleToggleSignature = () => toggleSection("signature");
+  const handleTogglePassword = () => toggleSection("password");
+  const handleToggleInstall = () => toggleSection("install");
 
   return (
     <div className="space-y-4">
@@ -180,35 +204,34 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
             />
           </svg>
         </button>
-        <h2 className="text-xl font-semibold text-gray-900">Ayuda</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{t("help.title")}</h2>
       </div>
 
       {/* Accordion Sections */}
       <div className="space-y-3">
         {/* 1. Iniciar sesión */}
         <AccordionSection
-          title="Iniciar sesión"
+          title={t("help.login.title")}
           icon={<LoginIcon />}
           isOpen={openSection === "login"}
-          onToggle={() => toggleSection("login")}
+          onToggle={handleToggleLogin}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Para acceder a la aplicación necesitas las credenciales proporcionadas por tu empresa.
+              {t("help.login.intro")}
             </p>
             <Step number={1}>
-              Introduce tu <strong>email</strong> de trabajo.
+              <BoldTrans i18nKey="help.login.step1" />
             </Step>
             <Step number={2}>
-              Introduce tu <strong>contraseña</strong>.
+              <BoldTrans i18nKey="help.login.step2" />
             </Step>
             <Step number={3}>
-              Pulsa <strong>"Iniciar sesión"</strong>.
+              <BoldTrans i18nKey="help.login.step3" />
             </Step>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800 text-sm">
-                <strong>Consejo:</strong> Si olvidaste tu contraseña, pulsa en "¿Olvidaste tu contraseña?"
-                para recibir un enlace de recuperación en tu email.
+                <BoldTrans i18nKey="help.login.tip" />
               </p>
             </div>
           </div>
@@ -216,28 +239,27 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 2. Registrar jornada */}
         <AccordionSection
-          title="Registrar jornada"
+          title={t("help.time.title")}
           icon={<ClockIcon />}
           isOpen={openSection === "time"}
-          onToggle={() => toggleSection("time")}
+          onToggle={handleToggleTime}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Registra tu entrada y salida del trabajo de forma sencilla.
+              {t("help.time.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Crear registro de jornada"</strong> en el menú principal.
+              <BoldTrans i18nKey="help.time.step1" />
             </Step>
             <Step number={2}>
-              Si trabajas para varias empresas, <strong>selecciona la empresa</strong> correspondiente.
+              <BoldTrans i18nKey="help.time.step2" />
             </Step>
             <Step number={3}>
-              Pulsa el botón de <strong>"Entrada"</strong> o <strong>"Salida"</strong> según corresponda.
+              <BoldTrans i18nKey="help.time.step3" />
             </Step>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 text-sm">
-                <strong>Nota:</strong> El sistema alterna automáticamente entre entrada y salida.
-                Si tu último registro fue una entrada, el siguiente será una salida.
+                <BoldTrans i18nKey="help.time.note" />
               </p>
             </div>
           </div>
@@ -245,31 +267,30 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 3. Reportar incidencias */}
         <AccordionSection
-          title="Reportar incidencias"
+          title={t("help.incident.title")}
           icon={<IncidentIcon />}
           isOpen={openSection === "incident"}
-          onToggle={() => toggleSection("incident")}
+          onToggle={handleToggleIncident}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Comunica cualquier problema o situación especial relacionada con tu jornada.
+              {t("help.incident.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Crear incidencia"</strong> en el menú principal.
+              <BoldTrans i18nKey="help.incident.step1" />
             </Step>
             <Step number={2}>
-              Selecciona la <strong>empresa</strong> si trabajas para varias.
+              <BoldTrans i18nKey="help.incident.step2" />
             </Step>
             <Step number={3}>
-              Describe detalladamente la <strong>incidencia</strong> en el campo de texto.
+              <BoldTrans i18nKey="help.incident.step3" />
             </Step>
             <Step number={4}>
-              Pulsa <strong>"Enviar incidencia"</strong>.
+              <BoldTrans i18nKey="help.incident.step4" />
             </Step>
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 text-sm">
-                <strong>Ejemplos de incidencias:</strong> Olvidé fichar, problemas técnicos,
-                ausencia justificada, etc.
+                <BoldTrans i18nKey="help.incident.examples" />
               </p>
             </div>
           </div>
@@ -277,37 +298,36 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 4. Solicitar cambios */}
         <AccordionSection
-          title="Solicitar cambios de registro"
+          title={t("help.change.title")}
           icon={<ChangeRequestIcon />}
           isOpen={openSection === "change"}
-          onToggle={() => toggleSection("change")}
+          onToggle={handleToggleChange}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Si cometiste un error en un registro, puedes solicitar una corrección.
+              {t("help.change.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Petición de cambio de registro"</strong>.
+              <BoldTrans i18nKey="help.change.step1" />
             </Step>
             <Step number={2}>
-              Selecciona la <strong>fecha</strong> del registro que quieres modificar.
+              <BoldTrans i18nKey="help.change.step2" />
             </Step>
             <Step number={3}>
-              Selecciona el <strong>registro específico</strong> (entrada o salida).
+              <BoldTrans i18nKey="help.change.step3" />
             </Step>
             <Step number={4}>
-              Indica la <strong>nueva hora correcta</strong>.
+              <BoldTrans i18nKey="help.change.step4" />
             </Step>
             <Step number={5}>
-              Escribe el <strong>motivo</strong> de la solicitud.
+              <BoldTrans i18nKey="help.change.step5" />
             </Step>
             <Step number={6}>
-              Pulsa <strong>"Enviar solicitud"</strong>.
+              <BoldTrans i18nKey="help.change.step6" />
             </Step>
             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
               <p className="text-orange-800 text-sm">
-                <strong>Importante:</strong> La solicitud quedará pendiente de aprobación
-                por parte del administrador.
+                <BoldTrans i18nKey="help.change.important" />
               </p>
             </div>
           </div>
@@ -315,34 +335,33 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 5. Consultar informes mensuales */}
         <AccordionSection
-          title="Consultar informes mensuales"
+          title={t("help.report.title")}
           icon={<ReportIcon />}
           isOpen={openSection === "report"}
-          onToggle={() => toggleSection("report")}
+          onToggle={handleToggleReport}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Consulta tus informes mensuales de jornada y descárgalos en PDF.
+              {t("help.report.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Consultar informe mensual"</strong> en el menú principal.
+              <BoldTrans i18nKey="help.report.step1" />
             </Step>
             <Step number={2}>
-              Selecciona la <strong>empresa</strong>, el <strong>año</strong> y el <strong>mes</strong>.
+              <BoldTrans i18nKey="help.report.step2" />
             </Step>
             <Step number={3}>
-              Pulsa <strong>"Generar informe"</strong> para ver el resumen.
+              <BoldTrans i18nKey="help.report.step3" />
             </Step>
             <Step number={4}>
-              Revisa el detalle diario pulsando en cada fila para expandirla.
+              {t("help.report.step4")}
             </Step>
             <Step number={5}>
-              Pulsa <strong>"Descargar PDF"</strong> para guardar una copia en tu dispositivo.
+              <BoldTrans i18nKey="help.report.step5" />
             </Step>
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800 text-sm">
-                <strong>Nota:</strong> El informe muestra las horas trabajadas, pausas y el
-                estado de firma del mes.
+                <BoldTrans i18nKey="help.report.note" />
               </p>
             </div>
           </div>
@@ -350,31 +369,30 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 6. Firmar registros mensuales */}
         <AccordionSection
-          title="Firmar registros mensuales"
+          title={t("help.signature.title")}
           icon={<SignatureIcon />}
           isOpen={openSection === "signature"}
-          onToggle={() => toggleSection("signature")}
+          onToggle={handleToggleSignature}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Firma tus registros mensuales para confirmar que son correctos.
+              {t("help.signature.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Firmar registros mensuales"</strong> en el menú principal.
+              <BoldTrans i18nKey="help.signature.step1" />
             </Step>
             <Step number={2}>
-              Selecciona la <strong>empresa</strong>.
+              <BoldTrans i18nKey="help.signature.step2" />
             </Step>
             <Step number={3}>
-              Verás los meses pendientes de firma. Pulsa <strong>"Firmar"</strong> en el mes que quieras confirmar.
+              <BoldTrans i18nKey="help.signature.step3" />
             </Step>
             <Step number={4}>
-              Revisa el mensaje de confirmación y pulsa <strong>"Firmar"</strong> para confirmar.
+              <BoldTrans i18nKey="help.signature.step4" />
             </Step>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 text-sm">
-                <strong>Importante:</strong> La firma es irreversible. Asegúrate de haber revisado
-                tus registros antes de firmar. Te recomendamos consultar primero el informe mensual.
+                <BoldTrans i18nKey="help.signature.important" />
               </p>
             </div>
           </div>
@@ -382,44 +400,43 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
         {/* 7. Cambiar contraseña */}
         <AccordionSection
-          title="Cambiar contraseña"
+          title={t("help.password.title")}
           icon={<PasswordIcon />}
           isOpen={openSection === "password"}
-          onToggle={() => toggleSection("password")}
+          onToggle={handleTogglePassword}
         >
           <div className="space-y-3 text-sm">
             <p className="text-gray-600 mb-4">
-              Puedes cambiar tu contraseña en cualquier momento desde los ajustes.
+              {t("help.password.intro")}
             </p>
             <Step number={1}>
-              Pulsa en <strong>"Ajustes"</strong> en el menú principal.
+              <BoldTrans i18nKey="help.password.step1" />
             </Step>
             <Step number={2}>
-              Introduce tu <strong>contraseña actual</strong>.
+              <BoldTrans i18nKey="help.password.step2" />
             </Step>
             <Step number={3}>
-              Introduce la <strong>nueva contraseña</strong> (mínimo 6 caracteres).
+              <BoldTrans i18nKey="help.password.step3" />
             </Step>
             <Step number={4}>
-              Confirma la nueva contraseña.
+              {t("help.password.step4")}
             </Step>
             <Step number={5}>
-              Pulsa <strong>"Cambiar contraseña"</strong>.
+              <BoldTrans i18nKey="help.password.step5" />
             </Step>
           </div>
         </AccordionSection>
 
         {/* 8. Añadir a pantalla de inicio */}
         <AccordionSection
-          title="Añadir a pantalla de inicio"
+          title={t("help.install.title")}
           icon={<PhoneIcon />}
           isOpen={openSection === "install"}
-          onToggle={() => toggleSection("install")}
+          onToggle={handleToggleInstall}
         >
           <div className="space-y-6 text-sm">
             <p className="text-gray-600">
-              Puedes añadir esta aplicación a la pantalla de inicio de tu teléfono
-              para acceder más rápidamente, como si fuera una app nativa.
+              {t("help.install.intro")}
             </p>
 
             {/* iOS Instructions */}
@@ -430,21 +447,21 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-900">iPhone / iPad (Safari)</h4>
+                <h4 className="font-semibold text-gray-900">{t("help.install.iosTitle")}</h4>
               </div>
 
               <div className="space-y-3">
                 <Step number={1}>
-                  Abre esta página en <strong>Safari</strong> (es obligatorio usar Safari).
+                  <BoldTrans i18nKey="help.install.ios1" />
                 </Step>
                 <Step number={2} icon={<ShareIconSimple className="w-5 h-5 text-blue-500" />}>
-                  Pulsa el icono de <strong>compartir</strong> en la barra inferior.
+                  <BoldTrans i18nKey="help.install.ios2" />
                 </Step>
                 <Step number={3} icon={<AddToHomeIcon className="w-5 h-5 text-blue-500" />}>
-                  Desplázate y selecciona <strong>"Añadir a pantalla de inicio"</strong>.
+                  <BoldTrans i18nKey="help.install.ios3" />
                 </Step>
                 <Step number={4}>
-                  Confirma el nombre y pulsa <strong>"Añadir"</strong>.
+                  <BoldTrans i18nKey="help.install.ios4" />
                 </Step>
               </div>
 
@@ -456,7 +473,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <span className="text-xs text-gray-600">Jornada</span>
+                    <span className="text-xs text-gray-600">{t("help.install.appLabel")}</span>
                   </div>
                 </div>
               </div>
@@ -470,21 +487,21 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
                     <path d="M17.6 11.48l1.78-3.08c.1-.18.04-.4-.13-.51-.17-.1-.4-.04-.5.13l-1.8 3.12c-1.37-.59-2.9-.92-4.55-.92s-3.18.33-4.55.92l-1.8-3.12c-.1-.17-.33-.23-.5-.13-.17.1-.23.33-.13.51l1.78 3.08C4.07 13.18 1.84 16.19 1.5 19.5h21c-.34-3.31-2.57-6.32-4.9-8.02zM7 17.75c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm10 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-900">Android (Chrome)</h4>
+                <h4 className="font-semibold text-gray-900">{t("help.install.androidTitle")}</h4>
               </div>
 
               <div className="space-y-3">
                 <Step number={1}>
-                  Abre esta página en <strong>Google Chrome</strong>.
+                  <BoldTrans i18nKey="help.install.android1" />
                 </Step>
                 <Step number={2} icon={<MenuDotsIcon className="w-5 h-5 text-gray-700" />}>
-                  Pulsa el icono de <strong>menú</strong> (tres puntos verticales) arriba a la derecha.
+                  <BoldTrans i18nKey="help.install.android2" />
                 </Step>
                 <Step number={3}>
-                  Selecciona <strong>"Añadir a pantalla de inicio"</strong> o <strong>"Instalar aplicación"</strong>.
+                  <BoldTrans i18nKey="help.install.android3" />
                 </Step>
                 <Step number={4}>
-                  Confirma pulsando <strong>"Añadir"</strong>.
+                  <BoldTrans i18nKey="help.install.android4" />
                 </Step>
               </div>
 
@@ -496,7 +513,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <span className="text-xs text-gray-600">Jornada</span>
+                    <span className="text-xs text-gray-600">{t("help.install.appLabel")}</span>
                   </div>
                 </div>
               </div>
@@ -504,8 +521,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
             <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
               <p className="text-purple-800 text-sm">
-                <strong>Ventaja:</strong> Una vez añadida, la aplicación se abrirá a pantalla completa,
-                sin la barra de direcciones del navegador, ofreciendo una experiencia más cómoda.
+                <BoldTrans i18nKey="help.install.advantage" />
               </p>
             </div>
           </div>
@@ -514,7 +530,7 @@ const Help: React.FC<HelpProps> = ({ onBack }) => {
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-400 mt-6 pt-4 border-t border-gray-200">
-        <p>OpenJornada - Registro de Jornada</p>
+        <p>{t("help.footer")}</p>
       </div>
     </div>
   );

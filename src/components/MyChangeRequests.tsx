@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { WorkerChangeRequest } from "../types";
 import { formatToLocalTime, formatToLocalTimeShort } from "../utils/dateFormatters";
@@ -9,12 +10,6 @@ interface MyChangeRequestsProps {
   userPassword: string;
   onNewRequest?: () => void;
 }
-
-const statusLabel: Record<WorkerChangeRequest["status"], string> = {
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-};
 
 const statusBadgeClass: Record<WorkerChangeRequest["status"], string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -33,9 +28,16 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
   userPassword,
   onNewRequest,
 }) => {
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<WorkerChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const statusLabel: Record<WorkerChangeRequest["status"], string> = {
+    pending: t("changeRequests.list.status.pending"),
+    accepted: t("changeRequests.list.status.accepted"),
+    rejected: t("changeRequests.list.status.rejected"),
+  };
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -48,7 +50,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
       setRequests(sorted);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al cargar las peticiones de cambio",
+        err instanceof Error ? err.message : t("changeRequests.list.loadError"),
       );
     } finally {
       setLoading(false);
@@ -79,7 +81,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          Volver al menú
+          {t("common.backToMenu")}
         </button>
 
         <button
@@ -99,7 +101,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          Nueva petición
+          {t("changeRequests.list.new")}
         </button>
       </div>
 
@@ -119,7 +121,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
               />
             </svg>
-            Mis peticiones de cambio
+            {t("changeRequests.list.title")}
           </h3>
         </div>
 
@@ -146,7 +148,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Cargando...
+              {t("common.loading")}
             </div>
           )}
 
@@ -171,14 +173,14 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                 onClick={loadRequests}
                 className="ml-auto text-red-700 underline text-xs flex-shrink-0"
               >
-                Reintentar
+                {t("common.retry")}
               </button>
             </div>
           )}
 
           {!loading && !error && requests.length === 0 && (
             <p className="text-gray-500 text-sm text-center py-8">
-              No tienes peticiones de cambio registradas.
+              {t("changeRequests.list.empty")}
             </p>
           )}
 
@@ -196,7 +198,9 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                           {formatDateDMY(req.date)}
                         </span>
                         <span className="text-sm text-gray-500">
-                          {req.original_type === "entry" ? "Entrada" : "Salida"}
+                          {req.original_type === "entry"
+                            ? t("timeRecord.recordType.entry")
+                            : t("timeRecord.recordType.exit")}
                         </span>
                         <span className="text-sm text-gray-700">
                           {formatToLocalTimeShort(req.original_timestamp)}
@@ -208,13 +212,14 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
                         {req.company_name}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        Enviada el{" "}
-                        {formatToLocalTime(req.created_at, {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        {t("changeRequests.list.sentOn", {
+                          datetime: formatToLocalTime(req.created_at, {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }),
                         })}
                       </p>
                     </div>

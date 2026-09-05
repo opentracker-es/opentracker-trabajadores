@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 
 interface CreateIncidentProps {
@@ -12,6 +13,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
   userEmail,
   userPassword,
 }) => {
+  const { t } = useTranslation();
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -21,7 +23,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
     e.preventDefault();
 
     if (!description.trim()) {
-      setError("Por favor, describe la incidencia.");
+      setError(t("incident.descriptionRequired"));
       return;
     }
 
@@ -44,11 +46,15 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
       }, 3000);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error al crear la incidencia";
+        err instanceof Error ? err.message : t("incident.createError");
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
   };
 
   return (
@@ -71,7 +77,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -90,7 +96,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            Crear incidencia
+            {t("incident.title")}
           </h3>
         </div>
 
@@ -100,21 +106,21 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
               htmlFor="description"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Descripción de la incidencia
+              {t("incident.descriptionLabel")}
             </label>
             <textarea
               id="description"
               name="description"
               rows={8}
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 resize-none"
-              placeholder="Describe el problema o situación que quieres reportar..."
+              placeholder={t("incident.descriptionPlaceholder")}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={handleDescriptionChange}
               disabled={loading}
               required
             />
             <p className="mt-2 text-sm text-gray-500">
-              Explica con detalle la incidencia para que pueda ser atendida correctamente.
+              {t("incident.descriptionHelp")}
             </p>
           </div>
 
@@ -133,7 +139,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span className="truncate">Trabajador: {userEmail}</span>
+              <span className="truncate">{t("incident.workerWithEmail", { email: userEmail })}</span>
             </div>
           </div>
 
@@ -154,7 +160,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
                 />
               </svg>
               <span>
-                Incidencia creada correctamente. Tu empresa será notificada.
+                {t("incident.success")}
               </span>
             </div>
           )}
@@ -207,7 +213,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Enviando incidencia...
+                  {t("incident.submitting")}
                 </>
               ) : (
                 <>
@@ -224,7 +230,7 @@ const CreateIncident: React.FC<CreateIncidentProps> = ({
                       d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                     />
                   </svg>
-                  Enviar incidencia
+                  {t("incident.submit")}
                 </>
               )}
             </button>

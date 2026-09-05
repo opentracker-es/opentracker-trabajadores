@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { TeamCalendarEntry } from "../types";
 
@@ -34,6 +35,7 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
   userPassword,
   companyId,
 }) => {
+  const { t } = useTranslation();
   const [range] = useState(defaultRange);
   const [entries, setEntries] = useState<TeamCalendarEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,10 +57,11 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
       );
       setEntries(sorted);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar el calendario");
+      setError(err instanceof Error ? err.message : t("absences.calendar.loadError"));
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail, userPassword, companyId, range.start, range.end]);
 
   useEffect(() => {
@@ -84,7 +87,7 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver
+        {t("common.back")}
       </button>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -103,10 +106,13 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
                 d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-3-6.65"
               />
             </svg>
-            Quién está fuera
+            {t("absences.calendar.title")}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Del {formatDateDMY(range.start)} al {formatDateDMY(range.end)}
+            {t("absences.calendar.range", {
+              start: formatDateDMY(range.start),
+              end: formatDateDMY(range.end),
+            })}
           </p>
         </div>
 
@@ -133,7 +139,7 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Cargando...
+              {t("common.loading")}
             </div>
           )}
 
@@ -147,14 +153,14 @@ const TeamCalendar: React.FC<TeamCalendarProps> = ({
                 onClick={loadCalendar}
                 className="ml-auto text-red-700 underline text-xs flex-shrink-0"
               >
-                Reintentar
+                {t("common.retry")}
               </button>
             </div>
           )}
 
           {!loading && !error && entries.length === 0 && (
             <p className="text-gray-500 text-sm text-center py-8">
-              No hay ausencias previstas en este periodo.
+              {t("absences.calendar.empty")}
             </p>
           )}
 

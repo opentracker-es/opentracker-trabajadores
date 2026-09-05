@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+import { getApiErrorMessage } from './errorMessages';
 import {
   SubscriptionBlockedError,
   emitSubscriptionBlocked,
@@ -15,6 +17,8 @@ export interface WorkerCompany {
   name: string;
   created_at: string;
   updated_at: string;
+  /** Idioma de notificaciones de la empresa (fuente de herencia del locale UI). */
+  notification_language?: string;
 }
 
 export const authService = {
@@ -28,46 +32,45 @@ export const authService = {
    * @throws Error si las credenciales son inválidas o hay problema de conexión
    */
   async validateWorker(credentials: WorkerLoginCredentials): Promise<WorkerCompany[]> {
+    let response: Response;
     try {
-      const response = await fetch(`${API_URL}/api/workers/my-companies`, {
+      response = await fetch(`${API_URL}/api/workers/my-companies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
       });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Email o contraseña incorrectos');
-        }
-        if (response.status === 500) {
-          throw new Error('Error del servidor. Por favor, inténtalo de nuevo más tarde.');
-        }
-        // Suscripción de la empresa inactiva (gate 402 subscription_inactive)
-        let detail: string | undefined;
-        try {
-          detail = (await response.json())?.detail;
-        } catch {
-          /* cuerpo no-JSON */
-        }
-        if (response.status === 402 || detail === 'subscription_inactive') {
-          emitSubscriptionBlocked();
-          throw new SubscriptionBlockedError();
-        }
-        throw new Error('Error al validar credenciales. Por favor, inténtalo de nuevo.');
-      }
-
-      const companies = await response.json();
-      return companies;
-
-    } catch (err) {
-      // Si es un error que ya lanzamos, lo propagamos
-      if (err instanceof Error) {
-        throw err;
-      }
+    } catch {
       // Error de red o conexión
-      throw new Error('No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+      throw new Error(i18n.t('errors.network.generic'));
     }
+
+    if (!response.ok) {
+      // El cuerpo puede traer `detail` objeto ({ error_code, message }) o string plano.
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch {
+        /* cuerpo no-JSON */
+      }
+      const detail = (body as { detail?: unknown } | undefined)?.detail;
+
+      // Suscripción de la empresa inactiva (gate 402 subscription_inactive)
+      if (response.status === 402 || detail === 'subscription_inactive') {
+        emitSubscriptionBlocked();
+        throw new SubscriptionBlockedError();
+      }
+
+      throw new Error(
+        getApiErrorMessage({
+          isAxiosError: true,
+          response: { status: response.status, data: { detail } },
+        }),
+      );
+    }
+
+    const companies = await response.json();
+    return companies;
   },
 };

@@ -5,7 +5,13 @@
  * - Backend siempre guarda en UTC (ISO 8601 con "Z")
  * - Frontend convierte a zona horaria local del navegador
  * - toLocaleString() aplica automáticamente timezone del navegador
+ * - El locale de formato (es-ES/en-GB/ca-ES) sigue el idioma UI activo (i18n)
  */
+import i18n, { activeLocale } from '../i18n';
+import { toIntlTag } from '../i18n/config';
+
+/** Etiqueta Intl para el idioma UI activo ("es-ES" | "en-GB" | "ca-ES"). */
+const activeIntlLocale = (): string => toIntlTag(activeLocale());
 
 /**
  * Formatea una fecha UTC a la zona horaria del navegador
@@ -35,7 +41,7 @@ export const formatToLocalTime = (
     ...options,
   };
 
-  return date.toLocaleString('es-ES', defaultOptions);
+  return date.toLocaleString(activeIntlLocale(), defaultOptions);
 };
 
 /**
@@ -52,7 +58,7 @@ export const formatToLocalTimeShort = (
 
   const date = new Date(utcDateStr);
 
-  return date.toLocaleString('es-ES', {
+  return date.toLocaleString(activeIntlLocale(), {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -137,26 +143,25 @@ export const getBrowserTimezone = (): string => {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
 
-const MONTH_NAMES_ES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
-
 /**
- * Devuelve el nombre del mes en español
+ * Devuelve el nombre del mes en el idioma UI activo (Intl; mayúscula inicial).
  * @param month - Número del mes (1-12)
  */
 export const getMonthName = (month: number): string => {
-  return MONTH_NAMES_ES[month - 1] || '';
+  if (month < 1 || month > 12) return '';
+  const name = new Intl.DateTimeFormat(activeIntlLocale(), {
+    month: 'long',
+  }).format(new Date(2024, month - 1, 1));
+  return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
 /**
- * Formatea minutos a formato "Xh Ym"
+ * Formatea minutos a "Xh Ym" usando el catálogo del idioma activo.
  * @param minutes - Minutos totales
  */
 export const formatMinutesToHoursMinutes = (minutes: number): string => {
-  if (!minutes || minutes <= 0) return '0h 0m';
+  if (!minutes || minutes <= 0) return i18n.t('common.durationZero');
   const hours = Math.floor(minutes / 60);
   const mins = Math.round(minutes % 60);
-  return `${hours}h ${mins}m`;
+  return i18n.t('common.duration', { hours, minutes: mins });
 };
