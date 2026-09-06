@@ -178,7 +178,7 @@
     "newDatetimeLabel": "Nova data i hora",
     "newDatetimeHelp": "La data i l'hora a les quals desitgeu canviar el registre.",
     "reasonLabel": "Motiu del canvi",
-    "reasonPlaceholder": "Expiqueu per què necessiteu canviar aquest registre (mínim 10 caràcters)...",
+    "reasonPlaceholder": "Expliqueu per què necessiteu canviar aquest registre (mínim 10 caràcters)...",
     "reasonHelp": "Proporcioneu una explicació clara del motiu del canvi.",
     "workerWithEmail": "Treballador: {{email}}",
     "success": "Sol·licitud enviada correctament. Serà revisada per un administrador.",
@@ -398,7 +398,7 @@
       "step1": "Premeu <1>\"Crear registre de jornada\"</1> al menú principal.",
       "step2": "Si treballeu per a diverses empreses, <1>seleccioneu l'empresa</1> corresponent.",
       "step3": "Premeu el botó de <1>\"Entrada\"</1> o <2>\"Sortida\"</2> segons correspongui.",
-      "note": "<1>Nota:</1> El sistema altern automàticament entre entrada i sortida. Si el vostre últim registre va ser una entrada, el següent serà una sortida."
+      "note": "<1>Nota:</1> El sistema alterna automàticament entre entrada i sortida. Si el vostre últim registre va ser una entrada, el següent serà una sortida."
     },
     "incident": {
       "title": "Reportar incidències",
