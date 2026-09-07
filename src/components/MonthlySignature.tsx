@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { Company, SignatureStatusResponse, SignatureMonth } from "../types";
@@ -63,16 +63,9 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
     return () => {
       active = false;
     };
-  }, [userEmail, userPassword]);
+  }, [userEmail, userPassword, t]);
 
-  // Load signature status when company changes
-  useEffect(() => {
-    if (selectedCompanyId) {
-      loadSignatureStatus();
-    }
-  }, [selectedCompanyId]);
-
-  const loadSignatureStatus = async () => {
+  const loadSignatureStatus = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -96,7 +89,14 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
     } finally {
       setLoadingStatus(false);
     }
-  };
+  }, [userEmail, userPassword, selectedCompanyId, t]);
+
+  // Load signature status when company changes
+  useEffect(() => {
+    if (selectedCompanyId) {
+      loadSignatureStatus();
+    }
+  }, [selectedCompanyId, loadSignatureStatus]);
 
   const handleOpenModal = (month: SignatureMonth) => {
     setSelectedMonth(month);

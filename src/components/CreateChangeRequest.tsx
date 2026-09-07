@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { Company, TimeRecordResponse, ChangeRequestCreate } from "../types";
@@ -30,17 +30,7 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Check for pending requests on mount
-  useEffect(() => {
-    checkPendingRequest();
-  }, []);
-
-  // Load companies when component mounts
-  useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  const checkPendingRequest = async () => {
+  const checkPendingRequest = useCallback(async () => {
     try {
       const response = await apiService.checkPendingChangeRequest(
         userEmail,
@@ -51,9 +41,9 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
       // Silently fail - not critical
       console.error("Error checking pending requests:", err);
     }
-  };
+  }, [userEmail, userPassword]);
 
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     try {
       setLoadingCompanies(true);
       const response = await apiService.getWorkerCompanies(
@@ -73,16 +63,9 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
     } finally {
       setLoadingCompanies(false);
     }
-  };
+  }, [userEmail, userPassword, t]);
 
-  // Load day records when date and company are selected
-  useEffect(() => {
-    if (selectedDate && selectedCompanyId) {
-      loadDayRecords();
-    }
-  }, [selectedDate, selectedCompanyId]);
-
-  const loadDayRecords = async () => {
+  const loadDayRecords = useCallback(async () => {
     try {
       setLoadingRecords(true);
       setDayRecords([]);
@@ -112,7 +95,24 @@ const CreateChangeRequest: React.FC<CreateChangeRequestProps> = ({
     } finally {
       setLoadingRecords(false);
     }
-  };
+  }, [userEmail, userPassword, selectedDate, selectedCompanyId, t]);
+
+  // Check for pending requests on mount
+  useEffect(() => {
+    checkPendingRequest();
+  }, [checkPendingRequest]);
+
+  // Load companies when component mounts
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
+
+  // Load day records when date and company are selected
+  useEffect(() => {
+    if (selectedDate && selectedCompanyId) {
+      loadDayRecords();
+    }
+  }, [selectedDate, selectedCompanyId, loadDayRecords]);
 
   // Auto-populate new_datetime when a record is selected
   useEffect(() => {

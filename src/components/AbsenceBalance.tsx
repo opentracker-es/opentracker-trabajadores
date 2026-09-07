@@ -33,7 +33,7 @@ const AbsenceBalance: React.FC<AbsenceBalanceProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [userEmail, userPassword, companyId]);
+  }, [userEmail, userPassword, companyId, t]);
 
   useEffect(() => {
     loadBalance();

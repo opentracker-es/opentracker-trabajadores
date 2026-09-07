@@ -55,7 +55,7 @@ const MyChangeRequests: React.FC<MyChangeRequestsProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [userEmail, userPassword]);
+  }, [userEmail, userPassword, t]);
 
   useEffect(() => {
     loadRequests();

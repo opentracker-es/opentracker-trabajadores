@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { TimeRecordResponse, Company, PauseType, WorkerCurrentStatus } from "../types";
@@ -73,17 +73,9 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
     return () => {
       active = false;
     };
-  }, [credentials.email, credentials.password]);
+  }, [credentials.email, credentials.password, t]);
 
-  // Load current status when company changes
-  useEffect(() => {
-    if (selectedCompanyId) {
-      loadCurrentStatus();
-      loadPauseTypes();
-    }
-  }, [selectedCompanyId]);
-
-  const loadCurrentStatus = async () => {
+  const loadCurrentStatus = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -100,9 +92,9 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
     } finally {
       setLoadingStatus(false);
     }
-  };
+  }, [credentials.email, credentials.password, selectedCompanyId]);
 
-  const loadPauseTypes = async () => {
+  const loadPauseTypes = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -118,7 +110,15 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
     } catch (err) {
       console.error("Error loading pause types:", err);
     }
-  };
+  }, [credentials.email, credentials.password, selectedCompanyId]);
+
+  // Load current status when company changes
+  useEffect(() => {
+    if (selectedCompanyId) {
+      loadCurrentStatus();
+      loadPauseTypes();
+    }
+  }, [selectedCompanyId, loadCurrentStatus, loadPauseTypes]);
 
   const handleAction = async (action: 'entry' | 'exit' | 'pause_start' | 'pause_end') => {
     setError(null);

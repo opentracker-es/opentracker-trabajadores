@@ -70,7 +70,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
     return () => {
       active = false;
     };
-  }, [userEmail, userPassword]);
+  }, [userEmail, userPassword, t]);
 
   const handleGenerateReport = async () => {
     if (!selectedCompanyId) {
