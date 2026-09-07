@@ -372,11 +372,15 @@ npx tsc --noEmit
 
 ## 🌍 Internationalization
 
-Currently the application is in Spanish. To add other languages:
-
-1. Install `react-i18next`
-2. Create translation files in `/locales`
-3. Wrap components with `<Trans>`
+The app supports **Spanish, English and Catalan** via `i18next` + `react-i18next`
+(fallback `es`). Catalogs live in `src/locales/{es,en,ca}.json` and are lazy-loaded per
+locale. The UI language resolves through the chain
+`Worker.language ?? Company.notification_language ?? browser ?? es` and is persisted on
+the worker profile via `PATCH /api/workers/language` (requires password re-auth;
+"Automatic" clears the preference and inherits the company language). Catalogs are
+pre-cached by the service worker, so the translated UI works offline. API errors are
+translated by `error_code` (registry in `openjornada-api/docs/error-codes.md`). To add
+a new language, see [`docs/I18N.md`](../docs/I18N.md).
 
 ## 📱 Progressive Web App (PWA)
 

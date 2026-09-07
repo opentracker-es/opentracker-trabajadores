@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface FooterProps {
   onShowPrivacy?: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -16,7 +18,7 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
               onClick={onShowPrivacy}
               className="hover:text-gray-700 transition-colors underline"
             >
-              Política de Privacidad
+              {t("footer.privacy")}
             </button>
             <span>·</span>
           </>
@@ -27,7 +29,7 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
           rel="noopener noreferrer"
           className="hover:text-gray-700 transition-colors underline"
         >
-          Información RGPD
+          {t("footer.gdprInfo")}
         </a>
         <span>·</span>
         <a
@@ -36,11 +38,11 @@ const Footer: React.FC<FooterProps> = ({ onShowPrivacy }) => {
           rel="noopener noreferrer"
           className="hover:text-gray-700 transition-colors underline"
         >
-          Aviso Legal
+          {t("footer.legal")}
         </a>
       </div>
       <p className="mt-2">
-        © {currentYear} OpenJornada · Licencia AGPL-3.0
+        {t("footer.copyright", { year: currentYear })}
       </p>
     </footer>
   );

@@ -1,7 +1,15 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import i18n from '../i18n';
 import { MonthlyReportResponse, ModificationEntry } from '../types';
 import { getMonthName, formatMinutesToHoursMinutes } from './dateFormatters';
+
+/**
+ * Todos los textos del PDF salen del catálogo i18n del idioma activo (tarea 8.3):
+ * el PDF se genera en el idioma en que el trabajador usa la app.
+ */
+const t = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`pdf.${key}`, options);
 
 /**
  * Formatea una fecha ISO a dd/mm/yyyy en zona horaria local
@@ -26,18 +34,18 @@ function formatTimeLocal(isoString: string | null): string {
 }
 
 /**
- * Traduce el estado de firma al texto en español para el PDF
+ * Traduce el estado de firma al texto del idioma activo para el PDF
  */
 function getSignatureStatusText(
   status: 'pending' | 'signed' | 'not_required'
 ): string {
   switch (status) {
     case 'signed':
-      return 'Firmado';
+      return t('signature.signed');
     case 'pending':
-      return 'Pendiente';
+      return t('signature.pending');
     case 'not_required':
-      return 'No requerida';
+      return t('signature.notRequired');
   }
 }
 
@@ -55,7 +63,7 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
   // ─── 1. Header ────────────────────────────────────────────────────────
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Informe Mensual de Jornada', pageWidth / 2, y, {
+  doc.text(t('title'), pageWidth / 2, y, {
     align: 'center',
   });
   y += 14;
@@ -63,25 +71,25 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
   // ─── 2. Worker info block ─────────────────────────────────────────────
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('Nombre:', 14, y);
+  doc.text(t('name'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(report.worker_name, 50, y);
   y += 7;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('DNI:', 14, y);
+  doc.text(t('dni'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(report.worker_id_number, 50, y);
   y += 7;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Empresa:', 14, y);
+  doc.text(t('company'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(report.company_name, 50, y);
   y += 7;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Periodo:', 14, y);
+  doc.text(t('period'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(`${getMonthName(report.month)} ${report.year}`, 50, y);
   y += 12;
@@ -89,24 +97,24 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
   // ─── 3. Summary block ────────────────────────────────────────────────
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.text('Resumen', 14, y);
+  doc.text(t('summary'), 14, y);
   y += 8;
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('Días trabajados:', 14, y);
+  doc.text(t('daysWorked'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(String(report.total_days_worked), 60, y);
   y += 7;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Total horas:', 14, y);
+  doc.text(t('totalHours'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(formatMinutesToHoursMinutes(report.total_worked_minutes), 60, y);
   y += 7;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Total pausas:', 14, y);
+  doc.text(t('totalPauses'), 14, y);
   doc.setFont('helvetica', 'normal');
   doc.text(formatMinutesToHoursMinutes(report.total_pause_minutes), 60, y);
   y += 12;
@@ -126,7 +134,13 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
 
   autoTable(doc, {
     startY: y,
-    head: [['Fecha', 'Entrada', 'Salida', 'Horas', 'Pausas']],
+    head: [[
+      t('table.date'),
+      t('table.entry'),
+      t('table.exit'),
+      t('table.hours'),
+      t('table.pauses'),
+    ]],
     body: tableBody,
     theme: 'grid',
     headStyles: {
@@ -153,7 +167,7 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text(
-    `Estado de firma: ${getSignatureStatusText(report.signature_status)}`,
+    `${t('signatureStatus')} ${getSignatureStatusText(report.signature_status)}`,
     14,
     y
   );
@@ -168,12 +182,12 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text('Historial de modificaciones', 14, y);
+    doc.text(t('modificationsTitle'), 14, y);
     y += 8;
 
     const modificationsBody = allModifications.map((mod) => [
       formatDateLocal(mod.original_timestamp),
-      mod.record_type === 'entry' ? 'Entrada' : 'Salida',
+      mod.record_type === 'entry' ? t('recordType.entry') : t('recordType.exit'),
       formatTimeLocal(mod.original_timestamp),
       formatTimeLocal(mod.new_timestamp),
       mod.modified_by_admin_email,
@@ -182,7 +196,14 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
 
     autoTable(doc, {
       startY: y,
-      head: [['Fecha', 'Tipo', 'Hora original', 'Hora modificada', 'Aprobado por', 'Motivo']],
+      head: [[
+        t('modTable.date'),
+        t('modTable.type'),
+        t('modTable.originalTime'),
+        t('modTable.modifiedTime'),
+        t('modTable.approvedBy'),
+        t('modTable.reason'),
+      ]],
       body: modificationsBody,
       theme: 'grid',
       headStyles: {
@@ -217,16 +238,16 @@ export function generateMonthlyReportPDF(report: MonthlyReportResponse): void {
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
-  doc.text(`Generado el ${generatedTimestamp}`, pageWidth / 2, y, {
+  doc.text(t('generatedAt', { timestamp: generatedTimestamp }), pageWidth / 2, y, {
     align: 'center',
   });
   y += 5;
-  doc.text('OpenJornada - Registro de Jornada', pageWidth / 2, y, {
+  doc.text(t('footer'), pageWidth / 2, y, {
     align: 'center',
   });
 
   // ─── Trigger download ─────────────────────────────────────────────────
   const monthStr = String(report.month).padStart(2, '0');
-  const filename = `informe_${report.year}-${monthStr}_${report.worker_id_number}.pdf`;
+  const filename = `${t('filePrefix')}_${report.year}-${monthStr}_${report.worker_id_number}.pdf`;
   doc.save(filename);
 }

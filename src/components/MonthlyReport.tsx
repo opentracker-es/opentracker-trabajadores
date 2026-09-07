@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { Company, MonthlyReportResponse } from "../types";
 import {
+  formatToLocalTime,
   formatToLocalTimeShort,
   getMonthName,
   formatMinutesToHoursMinutes,
@@ -20,6 +22,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
   userEmail,
   userPassword,
 }) => {
+  const { t } = useTranslation();
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
@@ -36,6 +39,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
 
   // Load companies on component mount
   useEffect(() => {
+    let active = true;
     const loadCompanies = async () => {
       try {
         setLoadingCompanies(true);
@@ -43,6 +47,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
           userEmail,
           userPassword
         );
+        if (!active) return;
         setCompanies(companiesData);
 
         // Select first company by default
@@ -50,22 +55,26 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
           setSelectedCompanyId(companiesData[0].id);
         }
       } catch (err) {
+        if (!active) return;
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Error al cargar las empresas";
+            : t("common.loadCompaniesError");
         setError(errorMessage);
       } finally {
-        setLoadingCompanies(false);
+        if (active) setLoadingCompanies(false);
       }
     };
 
     loadCompanies();
-  }, [userEmail, userPassword]);
+    return () => {
+      active = false;
+    };
+  }, [userEmail, userPassword, t]);
 
   const handleGenerateReport = async () => {
     if (!selectedCompanyId) {
-      setError("Por favor, selecciona una empresa");
+      setError(t("monthlyReport.selectCompany"));
       return;
     }
 
@@ -85,7 +94,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
       setReport(reportData);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error al generar el informe";
+        err instanceof Error ? err.message : t("monthlyReport.generateError");
       setError(errorMessage);
     } finally {
       setLoadingReport(false);
@@ -117,19 +126,19 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
 
     const config = {
       signed: {
-        label: "Firmado",
+        label: t("monthlyReport.signature.signed"),
         bgColor: "bg-green-100",
         textColor: "text-green-800",
         borderColor: "border-green-300",
       },
       pending: {
-        label: "Pendiente",
+        label: t("monthlyReport.signature.pending"),
         bgColor: "bg-yellow-100",
         textColor: "text-yellow-800",
         borderColor: "border-yellow-300",
       },
       not_required: {
-        label: "No requerida",
+        label: t("monthlyReport.signature.notRequired"),
         bgColor: "bg-gray-100",
         textColor: "text-gray-600",
         borderColor: "border-gray-300",
@@ -200,7 +209,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
@@ -218,18 +227,18 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
               d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          Informe mensual
+          {t("monthlyReport.title")}
         </h3>
 
         {loadingCompanies && (
           <div className="mb-4 p-4 text-sm text-blue-800 rounded-lg bg-blue-50 border border-blue-200">
-            Cargando empresas...
+            {t("common.loadingCompanies")}
           </div>
         )}
 
         {!loadingCompanies && companies.length === 0 && (
           <div className="mb-4 p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 border border-yellow-200">
-            No tienes empresas asociadas. Contacta con el administrador.
+            {t("common.noCompanies")}
           </div>
         )}
 
@@ -241,7 +250,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                 htmlFor="report-company"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Empresa
+                {t("common.company")}
               </label>
               <select
                 id="report-company"
@@ -265,7 +274,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                   htmlFor="report-year"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Año
+                  {t("monthlyReport.year")}
                 </label>
                 <select
                   id="report-year"
@@ -286,7 +295,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                   htmlFor="report-month"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Mes
+                  {t("monthlyReport.month")}
                 </label>
                 <select
                   id="report-month"
@@ -341,7 +350,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Generando informe...
+                  {t("monthlyReport.generating")}
                 </>
               ) : (
                 <>
@@ -358,7 +367,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                       d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  Generar informe
+                  {t("monthlyReport.generate")}
                 </>
               )}
             </button>
@@ -374,7 +383,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
             <div className="border-b border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-lg font-semibold text-gray-900">
-                  Resumen
+                  {t("monthlyReport.summary")}
                 </h4>
                 {getSignatureBadge()}
               </div>
@@ -382,7 +391,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
             <div className="px-6 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-500">
-                  Trabajador
+                  {t("common.worker")}
                 </span>
                 <span className="text-sm font-semibold text-gray-900">
                   {report.worker_name}
@@ -390,7 +399,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-500">
-                  Empresa
+                  {t("common.company")}
                 </span>
                 <span className="text-sm font-semibold text-gray-900">
                   {report.company_name}
@@ -398,7 +407,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-500">
-                  Periodo
+                  {t("monthlyReport.period")}
                 </span>
                 <span className="text-sm font-semibold text-gray-900">
                   {getMonthName(report.month)} {report.year}
@@ -409,7 +418,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
                     <span className="text-xs font-medium text-blue-600 block">
-                      Días trabajados
+                      {t("monthlyReport.daysWorked")}
                     </span>
                     <span className="text-xl font-bold text-blue-900">
                       {report.total_days_worked}
@@ -417,7 +426,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                     <span className="text-xs font-medium text-green-600 block">
-                      Horas totales
+                      {t("monthlyReport.totalHours")}
                     </span>
                     <span className="text-xl font-bold text-green-900">
                       {formatMinutesToHoursMinutes(report.total_worked_minutes)}
@@ -425,7 +434,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                   </div>
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
                     <span className="text-xs font-medium text-orange-600 block">
-                      Pausas totales
+                      {t("monthlyReport.totalPauses")}
                     </span>
                     <span className="text-xl font-bold text-orange-900">
                       {formatMinutesToHoursMinutes(report.total_pause_minutes)}
@@ -433,7 +442,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                   </div>
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
                     <span className="text-xs font-medium text-purple-600 block">
-                      Horas extra
+                      {t("monthlyReport.overtime")}
                     </span>
                     <span className="text-xl font-bold text-purple-900">
                       {formatMinutesToHoursMinutes(report.total_overtime_minutes)}
@@ -444,13 +453,8 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
 
               {report.signed_at && (
                 <div className="text-xs text-gray-500 text-center pt-2">
-                  Firmado el{" "}
-                  {new Date(report.signed_at).toLocaleString("es-ES", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
+                  {t("monthlyReport.signedOn", {
+                    date: formatToLocalTime(report.signed_at),
                   })}
                 </div>
               )}
@@ -475,7 +479,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            Descargar PDF
+            {t("monthlyReport.downloadPdf")}
           </button>
 
           {/* Daily details table */}
@@ -495,23 +499,23 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                Detalle diario
+                {t("monthlyReport.dailyDetail")}
               </h4>
             </div>
 
             {report.daily_details.length === 0 ? (
               <div className="px-6 py-8 text-center text-sm text-gray-500">
-                No hay registros para este periodo.
+                {t("monthlyReport.emptyDays")}
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
                 {/* Table header - visible on md+ */}
                 <div className="hidden md:grid md:grid-cols-5 gap-4 px-6 py-3 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <span>Fecha</span>
-                  <span>Entrada</span>
-                  <span>Salida</span>
-                  <span>Trabajado</span>
-                  <span>Pausas</span>
+                  <span>{t("monthlyReport.table.date")}</span>
+                  <span>{t("monthlyReport.table.entry")}</span>
+                  <span>{t("monthlyReport.table.exit")}</span>
+                  <span>{t("monthlyReport.table.worked")}</span>
+                  <span>{t("monthlyReport.table.pauses")}</span>
                 </div>
 
                 {report.daily_details.map((day) => (
@@ -581,11 +585,11 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                           <span>
                             {day.first_entry
                               ? formatToLocalTimeShort(day.first_entry)
-                              : "--:--"}{" "}
+                              : t("common.timeNoValue")}{" "}
                             -{" "}
                             {day.last_exit
                               ? formatToLocalTimeShort(day.last_exit)
-                              : "--:--"}
+                              : t("common.timeNoValue")}
                           </span>
                           <span className="font-medium text-gray-700">
                             {formatMinutesToHoursMinutes(
@@ -635,12 +639,12 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({
                         <span className="text-sm text-gray-700">
                           {day.first_entry
                             ? formatToLocalTimeShort(day.first_entry)
-                            : "--:--"}
+                            : t("common.timeNoValue")}
                         </span>
                         <span className="text-sm text-gray-700">
                           {day.last_exit
                             ? formatToLocalTimeShort(day.last_exit)
-                            : "--:--"}
+                            : t("common.timeNoValue")}
                         </span>
                         <span className="text-sm font-medium text-gray-900">
                           {formatMinutesToHoursMinutes(

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
+import LoginLanguageSelector from "./LoginLanguageSelector";
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -12,6 +14,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   appName,
   appLogo,
 }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -23,7 +26,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
     setSuccess(false);
 
     if (!email.trim()) {
-      setError("Por favor, ingresa tu email.");
+      setError(t("forgotPassword.emailRequired"));
       return;
     }
 
@@ -37,7 +40,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al procesar la solicitud. Inténtalo de nuevo.";
+          : t("forgotPassword.processError");
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -48,6 +51,9 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-2">
+            <LoginLanguageSelector />
+          </div>
           <div className="bg-white shadow-md rounded-lg px-8 pt-8 pb-10">
             {/* Header */}
             <div className="mb-8 text-center">
@@ -59,11 +65,10 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                 />
               )}
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                ¿Olvidaste tu contraseña?
+                {t("forgotPassword.title")}
               </h1>
               <p className="text-sm text-gray-600">
-                Ingresa tu email y te enviaremos instrucciones para recuperar tu
-                cuenta
+                {t("forgotPassword.subtitle")}
               </p>
             </div>
 
@@ -74,7 +79,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                     htmlFor="email"
                     className="block text-gray-700 text-sm font-bold mb-2"
                   >
-                    Email
+                    {t("common.email")}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -100,7 +105,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="shadow appearance-none border rounded w-full py-3 px-4 pl-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                      placeholder="tu-email@ejemplo.com"
+                      placeholder={t("forgotPassword.emailPlaceholder")}
                       disabled={loading}
                       required
                     />
@@ -154,7 +159,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Enviando...
+                      {t("forgotPassword.submitting")}
                     </>
                   ) : (
                     <>
@@ -171,7 +176,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                           d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                         />
                       </svg>
-                      Enviar instrucciones
+                      {t("forgotPassword.submit")}
                     </>
                   )}
                 </button>
@@ -195,7 +200,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  Volver al inicio de sesión
+                  {t("forgotPassword.backToLogin")}
                 </button>
               </form>
             ) : (
@@ -218,19 +223,17 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    ¡Revisa tu correo!
+                    {t("forgotPassword.successTitle")}
                   </h2>
                   <p className="text-gray-600 mb-4">
-                    Si el email proporcionado está registrado, recibirás
-                    instrucciones para restablecer tu contraseña.
+                    {t("forgotPassword.successText")}
                   </p>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
                     <p className="font-semibold mb-1">
-                      📧 Revisa tu bandeja de entrada
+                      {t("forgotPassword.inboxTitle")}
                     </p>
                     <p>
-                      El correo puede tardar unos minutos en llegar. No olvides
-                      revisar tu carpeta de spam.
+                      {t("forgotPassword.inboxText")}
                     </p>
                   </div>
                 </div>
@@ -253,7 +256,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  Volver al inicio de sesión
+                  {t("forgotPassword.backToLogin")}
                 </button>
               </div>
             )}

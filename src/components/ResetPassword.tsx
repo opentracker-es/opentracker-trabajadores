@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
+import LoginLanguageSelector from "./LoginLanguageSelector";
 
 interface ResetPasswordProps {
   appName: string;
@@ -8,6 +10,7 @@ interface ResetPasswordProps {
 }
 
 const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
 
@@ -23,22 +26,22 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
 
     // Validaciones
     if (!newPassword || !confirmPassword) {
-      setError("Por favor, completa todos los campos.");
+      setError(t("resetPassword.fieldsRequired"));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+      setError(t("resetPassword.tooShort"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("resetPassword.mismatch"));
       return;
     }
 
     if (!token) {
-      setError("Token inválido.");
+      setError(t("resetPassword.invalidToken"));
       return;
     }
 
@@ -60,7 +63,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al restablecer la contraseña. Inténtalo de nuevo.";
+          : t("resetPassword.resetError");
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -71,6 +74,9 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
+          <div className="flex justify-end mb-2">
+            <LoginLanguageSelector />
+          </div>
           <div className="bg-white shadow-md rounded-lg px-8 pt-8 pb-10">
             {/* Header */}
             <div className="mb-8 text-center">
@@ -82,10 +88,10 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                 />
               )}
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Restablecer contraseña
+                {t("resetPassword.title")}
               </h1>
               <p className="text-sm text-gray-600">
-                Ingresa tu nueva contraseña
+                {t("resetPassword.subtitle")}
               </p>
             </div>
 
@@ -96,7 +102,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                     htmlFor="new-password"
                     className="block text-gray-700 text-sm font-bold mb-2"
                   >
-                    Nueva contraseña
+                    {t("resetPassword.newPassword")}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -122,7 +128,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="shadow appearance-none border rounded w-full py-3 px-4 pl-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={t("resetPassword.newPasswordPlaceholder")}
                       disabled={loading}
                       required
                     />
@@ -134,7 +140,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                     htmlFor="confirm-password"
                     className="block text-gray-700 text-sm font-bold mb-2"
                   >
-                    Confirmar nueva contraseña
+                    {t("resetPassword.confirmPassword")}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -160,7 +166,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="shadow appearance-none border rounded w-full py-3 px-4 pl-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                      placeholder="Repite la contraseña"
+                      placeholder={t("resetPassword.confirmPasswordPlaceholder")}
                       disabled={loading}
                       required
                     />
@@ -202,11 +208,11 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                     </svg>
                     <div className="text-sm text-blue-800">
                       <p className="font-semibold mb-1">
-                        Requisitos de contraseña
+                        {t("resetPassword.requirementsTitle")}
                       </p>
                       <ul className="list-disc list-inside space-y-1">
-                        <li>Mínimo 6 caracteres</li>
-                        <li>Las dos contraseñas deben coincidir</li>
+                        <li>{t("resetPassword.requirementMin")}</li>
+                        <li>{t("resetPassword.requirementMatch")}</li>
                       </ul>
                     </div>
                   </div>
@@ -239,7 +245,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Restableciendo...
+                      {t("resetPassword.submitting")}
                     </>
                   ) : (
                     <>
@@ -256,7 +262,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      Restablecer contraseña
+                      {t("resetPassword.submit")}
                     </>
                   )}
                 </button>
@@ -267,7 +273,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
                   className="w-full text-gray-600 hover:text-gray-900 font-medium py-2 transition-colors flex items-center justify-center"
                   disabled={loading}
                 >
-                  Volver al inicio de sesión
+                  {t("resetPassword.backToLogin")}
                 </button>
               </form>
             ) : (
@@ -290,14 +296,13 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ appName, appLogo }) => {
 
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    ¡Contraseña restablecida!
+                    {t("resetPassword.successTitle")}
                   </h2>
                   <p className="text-gray-600 mb-4">
-                    Tu contraseña ha sido cambiada correctamente. Ya puedes
-                    iniciar sesión con tu nueva contraseña.
+                    {t("resetPassword.successText")}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Serás redirigido al inicio de sesión en unos segundos...
+                    {t("resetPassword.redirecting")}
                   </p>
                 </div>
               </div>

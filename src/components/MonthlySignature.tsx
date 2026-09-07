@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { Company, SignatureStatusResponse, SignatureMonth } from "../types";
 import { getMonthName, formatToLocalTime } from "../utils/dateFormatters";
@@ -15,6 +16,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
   userEmail,
   userPassword,
 }) => {
+  const { t } = useTranslation();
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [signing, setSigning] = useState(false);
@@ -30,6 +32,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
 
   // Load companies on component mount
   useEffect(() => {
+    let active = true;
     const loadCompanies = async () => {
       try {
         setLoadingCompanies(true);
@@ -37,6 +40,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
           userEmail,
           userPassword
         );
+        if (!active) return;
         setCompanies(companiesData);
 
         // Select first company by default
@@ -44,27 +48,24 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
           setSelectedCompanyId(companiesData[0].id);
         }
       } catch (err) {
+        if (!active) return;
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Error al cargar las empresas";
+            : t("common.loadCompaniesError");
         setError(errorMessage);
       } finally {
-        setLoadingCompanies(false);
+        if (active) setLoadingCompanies(false);
       }
     };
 
     loadCompanies();
-  }, [userEmail, userPassword]);
+    return () => {
+      active = false;
+    };
+  }, [userEmail, userPassword, t]);
 
-  // Load signature status when company changes
-  useEffect(() => {
-    if (selectedCompanyId) {
-      loadSignatureStatus();
-    }
-  }, [selectedCompanyId]);
-
-  const loadSignatureStatus = async () => {
+  const loadSignatureStatus = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -83,12 +84,19 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al cargar el estado de firmas";
+          : t("monthlySignature.loadStatusError");
       setError(errorMessage);
     } finally {
       setLoadingStatus(false);
     }
-  };
+  }, [userEmail, userPassword, selectedCompanyId, t]);
+
+  // Load signature status when company changes
+  useEffect(() => {
+    if (selectedCompanyId) {
+      loadSignatureStatus();
+    }
+  }, [selectedCompanyId, loadSignatureStatus]);
 
   const handleOpenModal = (month: SignatureMonth) => {
     setSelectedMonth(month);
@@ -122,7 +130,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Error al firmar el informe mensual";
+          : t("monthlySignature.signError");
       setError(errorMessage);
       handleCloseModal();
     } finally {
@@ -149,7 +157,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
@@ -168,19 +176,19 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
             />
           </svg>
           <h3 className="text-lg font-semibold text-gray-900">
-            Firma mensual
+            {t("monthlySignature.title")}
           </h3>
         </div>
 
         {loadingCompanies && (
           <div className="mb-4 p-4 text-sm text-blue-800 rounded-lg bg-blue-50 border border-blue-200">
-            Cargando empresas...
+            {t("common.loadingCompanies")}
           </div>
         )}
 
         {!loadingCompanies && companies.length === 0 && (
           <div className="mb-4 p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 border border-yellow-200">
-            No tienes empresas asociadas. Contacta con el administrador.
+            {t("common.noCompanies")}
           </div>
         )}
 
@@ -191,7 +199,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                 htmlFor="company"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Empresa
+                {t("common.company")}
               </label>
               <select
                 id="company"
@@ -238,7 +246,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Cargando estado de firmas...
+                {t("monthlySignature.loadingStatus")}
               </div>
             )}
 
@@ -261,7 +269,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                       />
                     </svg>
                     <h4 className="text-sm font-semibold text-gray-800">
-                      Pendientes de firma
+                      {t("monthlySignature.pendingTitle")}
                     </h4>
                   </div>
 
@@ -280,7 +288,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Todos los meses están firmados
+                      {t("monthlySignature.allSigned")}
                     </div>
                   ) : (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg divide-y divide-yellow-200">
@@ -310,7 +318,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                                 d="M5 13l4 4L19 7"
                               />
                             </svg>
-                            Firmar
+                            {t("monthlySignature.sign")}
                           </button>
                         </div>
                       ))}
@@ -336,7 +344,7 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                         />
                       </svg>
                       <h4 className="text-sm font-semibold text-gray-800">
-                        Meses firmados
+                        {t("monthlySignature.signedTitle")}
                       </h4>
                     </div>
 
@@ -350,7 +358,9 @@ const MonthlySignature: React.FC<MonthlySignatureProps> = ({
                             {getMonthName(month.month)} {month.year}
                           </span>
                           <span className="text-xs text-green-700">
-                            Firmado el {formatToLocalTime(month.signed_at)}
+                            {t("monthlySignature.signedOn", {
+                              date: formatToLocalTime(month.signed_at),
+                            })}
                           </span>
                         </div>
                       ))}

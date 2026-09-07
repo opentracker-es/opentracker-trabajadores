@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import { TimeRecordResponse, Company, PauseType, WorkerCurrentStatus } from "../types";
 import { formatToLocalTime } from "../utils/dateFormatters";
@@ -15,6 +16,7 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
   credentials,
   onBack,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -32,14 +34,15 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
   };
 
   const formatDuration = (minutes?: number): string => {
-    if (!minutes) return "0h 0m";
+    if (!minutes) return t("common.durationZero");
     const hours = Math.floor(minutes / 60);
     const mins = Math.round(minutes % 60);
-    return `${hours}h ${mins}m`;
+    return t("common.duration", { hours, minutes: mins });
   };
 
   // Load companies on component mount
   useEffect(() => {
+    let active = true;
     const loadCompanies = async () => {
       try {
         setLoadingCompanies(true);
@@ -47,6 +50,7 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           credentials.email,
           credentials.password
         );
+        if (!active) return;
         setCompanies(companiesData);
 
         // Select first company by default
@@ -54,28 +58,24 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           setSelectedCompanyId(companiesData[0].id);
         }
       } catch (err) {
+        if (!active) return;
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Error al cargar las empresas";
+            : t("common.loadCompaniesError");
         setError(errorMessage);
       } finally {
-        setLoadingCompanies(false);
+        if (active) setLoadingCompanies(false);
       }
     };
 
     loadCompanies();
-  }, [credentials.email, credentials.password]);
+    return () => {
+      active = false;
+    };
+  }, [credentials.email, credentials.password, t]);
 
-  // Load current status when company changes
-  useEffect(() => {
-    if (selectedCompanyId) {
-      loadCurrentStatus();
-      loadPauseTypes();
-    }
-  }, [selectedCompanyId]);
-
-  const loadCurrentStatus = async () => {
+  const loadCurrentStatus = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -92,9 +92,9 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
     } finally {
       setLoadingStatus(false);
     }
-  };
+  }, [credentials.email, credentials.password, selectedCompanyId]);
 
-  const loadPauseTypes = async () => {
+  const loadPauseTypes = useCallback(async () => {
     if (!selectedCompanyId) return;
 
     try {
@@ -110,7 +110,15 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
     } catch (err) {
       console.error("Error loading pause types:", err);
     }
-  };
+  }, [credentials.email, credentials.password, selectedCompanyId]);
+
+  // Load current status when company changes
+  useEffect(() => {
+    if (selectedCompanyId) {
+      loadCurrentStatus();
+      loadPauseTypes();
+    }
+  }, [selectedCompanyId, loadCurrentStatus, loadPauseTypes]);
 
   const handleAction = async (action: 'entry' | 'exit' | 'pause_start' | 'pause_end') => {
     setError(null);
@@ -118,13 +126,13 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
 
     // Validate company selected
     if (!selectedCompanyId) {
-      setError("Por favor, selecciona una empresa");
+      setError(t("timeRecord.selectCompany"));
       return;
     }
 
     // Validate pause type for pause_start
     if (action === 'pause_start' && !selectedPauseTypeId) {
-      setError("Por favor, selecciona un tipo de pausa");
+      setError(t("timeRecord.selectPauseType"));
       return;
     }
 
@@ -149,7 +157,7 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
       }, 5000);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
+        err instanceof Error ? err.message : t("errors.network.unexpected");
       setError(errorMessage);
 
       // Clear error message after 5 seconds
@@ -164,19 +172,19 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
 
     const statusConfig = {
       logged_out: {
-        label: "Fuera de jornada",
+        label: t("timeRecord.status.loggedOut"),
         bgColor: "bg-gray-100",
         textColor: "text-gray-800",
         borderColor: "border-gray-300"
       },
       logged_in: {
-        label: "En jornada",
+        label: t("timeRecord.status.loggedIn"),
         bgColor: "bg-green-100",
         textColor: "text-green-800",
         borderColor: "border-green-300"
       },
       on_pause: {
-        label: "En pausa",
+        label: t("timeRecord.status.onPause"),
         bgColor: "bg-orange-100",
         textColor: "text-orange-800",
         borderColor: "border-orange-300"
@@ -195,19 +203,34 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
 
   const getRecordTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      entry: "Entrada",
-      exit: "Salida",
-      pause_start: "Inicio de Pausa",
-      pause_end: "Fin de Pausa",
+      entry: t("timeRecord.recordType.entry"),
+      exit: t("timeRecord.recordType.exit"),
+      pause_start: t("timeRecord.recordType.pauseStart"),
+      pause_end: t("timeRecord.recordType.pauseEnd"),
     };
     return labels[type] || type;
   };
+
+  const handleSelectCompany = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCompanyId(e.target.value);
+  };
+
+  const handleSelectPauseType = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPauseTypeId(e.target.value);
+  };
+
+  const handleStartPauseSelection = () => setShowPauseSelection(true);
+  const handleCancelPauseSelection = () => setShowPauseSelection(false);
+  const handleEntry = () => handleAction('entry');
+  const handleExit = () => handleAction('exit');
+  const handlePauseStart = () => handleAction('pause_start');
+  const handlePauseEnd = () => handleAction('pause_end');
 
   const renderActionButtons = () => {
     if (!currentStatus || loadingStatus) {
       return (
         <div className="text-center text-gray-500 py-4">
-          Cargando estado...
+          {t("timeRecord.loadingStatus")}
         </div>
       );
     }
@@ -216,17 +239,17 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
       return (
         <div className="space-y-4">
           <p className="text-sm text-gray-600 mb-4">
-            No tienes una jornada activa. Haz clic en "Entrada" para comenzar tu jornada laboral.
+            {t("timeRecord.noShiftHelp")}
           </p>
           <button
-            onClick={() => handleAction('entry')}
+            onClick={handleEntry}
             disabled={loading}
             className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
-            {loading ? "Procesando..." : "Entrada"}
+            {loading ? t("common.processing") : t("timeRecord.clockIn")}
           </button>
         </div>
       );
@@ -237,13 +260,13 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-900">Hora de entrada:</span>
+              <span className="text-sm font-medium text-blue-900">{t("timeRecord.entryTime")}</span>
               <span className="text-sm text-blue-700">
                 {formatDateTime(currentStatus.entry_time!)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-900">Tiempo trabajado:</span>
+              <span className="text-sm font-medium text-blue-900">{t("timeRecord.timeWorked")}</span>
               <span className="text-lg font-bold text-blue-700">
                 {formatDuration(currentStatus.time_worked_minutes)}
               </span>
@@ -251,30 +274,30 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           </div>
 
           <p className="text-sm text-gray-600 mb-4">
-            Estás en jornada. Puedes iniciar una pausa o finalizar tu jornada.
+            {t("timeRecord.onShiftHelp")}
           </p>
 
           {!showPauseSelection && (
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setShowPauseSelection(true)}
+                onClick={handleStartPauseSelection}
                 disabled={loading || pauseTypes.length === 0}
                 className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Iniciar Pausa
+                {t("timeRecord.startPause")}
               </button>
               <button
-                onClick={() => handleAction('exit')}
+                onClick={handleExit}
                 disabled={loading}
                 className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Salida
+                {t("timeRecord.clockOut")}
               </button>
             </div>
           )}
@@ -282,24 +305,24 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           {showPauseSelection && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-orange-900">Selecciona el tipo de pausa</h4>
+                <h4 className="text-sm font-medium text-orange-900">{t("timeRecord.choosePauseType")}</h4>
                 <button
-                  onClick={() => setShowPauseSelection(false)}
+                  onClick={handleCancelPauseSelection}
                   className="text-orange-600 hover:text-orange-800 text-sm"
                 >
-                  Cancelar
+                  {t("common.cancel")}
                 </button>
               </div>
 
               <select
                 value={selectedPauseTypeId}
-                onChange={(e) => setSelectedPauseTypeId(e.target.value)}
+                onChange={handleSelectPauseType}
                 className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 disabled={loading}
               >
                 {pauseTypes.map((pauseType) => (
                   <option key={pauseType.id} value={pauseType.id}>
-                    {pauseType.name} {pauseType.type === 'inside_shift' ? '⏱️ (Cuenta como trabajo)' : '⏸️ (Fuera de jornada)'}
+                    {pauseType.name} {pauseType.type === 'inside_shift' ? t('timeRecord.pauseCountsAsWork') : t('timeRecord.pauseOutsideShift')}
                   </option>
                 ))}
               </select>
@@ -311,11 +334,11 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
               )}
 
               <button
-                onClick={() => handleAction('pause_start')}
+                onClick={handlePauseStart}
                 disabled={loading}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? "Procesando..." : "Confirmar Pausa"}
+                {loading ? t("common.processing") : t("timeRecord.confirmPause")}
               </button>
             </div>
           )}
@@ -329,27 +352,27 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4 space-y-3">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-orange-900">Tipo de pausa:</span>
+                <span className="text-sm font-medium text-orange-900">{t("timeRecord.pauseType")}</span>
                 <span className="text-sm font-bold text-orange-700">
                   {currentStatus.pause_type_name}
                 </span>
               </div>
               <div className="text-xs text-orange-600">
                 {currentStatus.pause_counts_as_work
-                  ? "⏱️ Esta pausa cuenta como tiempo trabajado"
-                  : "⏸️ Esta pausa no cuenta como tiempo trabajado"}
+                  ? t("timeRecord.countsAsWork")
+                  : t("timeRecord.notCountsAsWork")}
               </div>
             </div>
 
             <div className="border-t border-orange-200 pt-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-orange-900">Duración de pausa:</span>
+                <span className="text-sm font-medium text-orange-900">{t("timeRecord.pauseDuration")}</span>
                 <span className="text-lg font-bold text-orange-700">
                   {formatDuration(currentStatus.pause_duration_minutes)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-orange-900">Tiempo trabajado hoy:</span>
+                <span className="text-sm font-medium text-orange-900">{t("timeRecord.workedToday")}</span>
                 <span className="text-sm text-orange-700">
                   {formatDuration(currentStatus.time_worked_minutes)}
                 </span>
@@ -358,11 +381,11 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
           </div>
 
           <p className="text-sm text-gray-600 mb-4">
-            Estás en pausa. Finaliza la pausa para continuar con tu jornada.
+            {t("timeRecord.onPauseHelp")}
           </p>
 
           <button
-            onClick={() => handleAction('pause_end')}
+            onClick={handlePauseEnd}
             disabled={loading}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
           >
@@ -370,7 +393,7 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {loading ? "Procesando..." : "Finalizar Pausa"}
+            {loading ? t("common.processing") : t("timeRecord.endPause")}
           </button>
         </div>
       );
@@ -398,26 +421,26 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver al menú
+        {t("common.backToMenu")}
       </button>
 
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            Registro de jornada
+            {t("timeRecord.title")}
           </h3>
           {getStatusBadge()}
         </div>
 
         {loadingCompanies && (
           <div className="mb-4 p-4 text-sm text-blue-800 rounded-lg bg-blue-50 border border-blue-200">
-            Cargando empresas...
+            {t("common.loadingCompanies")}
           </div>
         )}
 
         {!loadingCompanies && companies.length === 0 && (
           <div className="mb-4 p-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 border border-yellow-200">
-            No tienes empresas asociadas. Contacta con el administrador.
+            {t("common.noCompanies")}
           </div>
         )}
 
@@ -428,12 +451,12 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
                 htmlFor="company"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Empresa
+                {t("common.company")}
               </label>
               <select
                 id="company"
                 value={selectedCompanyId}
-                onChange={(e) => setSelectedCompanyId(e.target.value)}
+                onChange={handleSelectCompany}
                 className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                 disabled={loading}
               >
@@ -459,25 +482,25 @@ const CreateTimeRecord: React.FC<CreateTimeRecordProps> = ({
                 className="mb-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200"
                 role="alert"
               >
-                <p className="font-medium mb-2">¡Registro creado con éxito!</p>
+                <p className="font-medium mb-2">{t("timeRecord.createdTitle")}</p>
                 <div className="space-y-1">
                   <p>
-                    <span className="font-medium">Tipo:</span>{" "}
+                    <span className="font-medium">{t("timeRecord.typeLabel")}</span>{" "}
                     {getRecordTypeLabel(success.record_type)}
                   </p>
                   {success.pause_type_name && (
                     <p>
-                      <span className="font-medium">Pausa:</span>{" "}
+                      <span className="font-medium">{t("timeRecord.pauseLabel")}</span>{" "}
                       {success.pause_type_name}
                     </p>
                   )}
                   <p>
-                    <span className="font-medium">Hora:</span>{" "}
+                    <span className="font-medium">{t("timeRecord.timeLabel")}</span>{" "}
                     {formatDateTime(success.timestamp)}
                   </p>
                   {success.duration_minutes && (
                     <p>
-                      <span className="font-medium">Duración total:</span>{" "}
+                      <span className="font-medium">{t("timeRecord.durationLabel")}</span>{" "}
                       {formatDuration(success.duration_minutes)}
                     </p>
                   )}

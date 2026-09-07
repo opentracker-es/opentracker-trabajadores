@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans, useTranslation } from "react-i18next";
 
 interface SignatureConfirmModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ const SignatureConfirmModal: React.FC<SignatureConfirmModalProps> = ({
   year,
   loading,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -44,24 +47,23 @@ const SignatureConfirmModal: React.FC<SignatureConfirmModalProps> = ({
             />
           </svg>
           <h3 className="text-lg font-semibold text-gray-900">
-            Confirmar firma
+            {t("monthlySignature.modal.title")}
           </h3>
         </div>
 
         {/* Description */}
         <p className="text-sm text-gray-700 mb-4">
-          Vas a firmar tus registros de jornada de{" "}
-          <span className="font-semibold">
-            {monthName} {year}
-          </span>
-          . Esta acción confirma que los datos registrados son correctos.
+          <Trans
+            i18nKey="monthlySignature.modal.description"
+            values={{ month: monthName, year }}
+            components={{ 1: <span className="font-semibold" /> }}
+          />
         </p>
 
         {/* Legal text */}
         <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 mb-6">
           <p className="text-xs text-gray-600">
-            Al firmar, confirmas que has revisado los registros del mes y que son
-            correctos según tu conocimiento.
+            {t("monthlySignature.modal.legal")}
           </p>
         </div>
 
@@ -72,7 +74,7 @@ const SignatureConfirmModal: React.FC<SignatureConfirmModalProps> = ({
             disabled={loading}
             className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Cancelar
+            {t("monthlySignature.modal.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -100,7 +102,7 @@ const SignatureConfirmModal: React.FC<SignatureConfirmModalProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Firmando...
+                {t("monthlySignature.modal.signing")}
               </>
             ) : (
               <>
@@ -117,7 +119,7 @@ const SignatureConfirmModal: React.FC<SignatureConfirmModalProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Firmar
+                {t("monthlySignature.modal.confirm")}
               </>
             )}
           </button>

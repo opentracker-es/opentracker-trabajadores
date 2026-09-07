@@ -372,11 +372,16 @@ npx tsc --noEmit
 
 ## 🌍 Internacionalización
 
-Actualmente la aplicación está en español. Para añadir otros idiomas:
-
-1. Instalar `react-i18next`
-2. Crear archivos de traducción en `/locales`
-3. Envolver componentes con `<Trans>`
+La app soporta **español, inglés y catalán** mediante `i18next` + `react-i18next`
+(fallback `es`). Los catálogos están en `src/locales/{es,en,ca}.json` y se cargan de
+forma diferida por idioma. El idioma de UI se resuelve con la cadena
+`Worker.language ?? Company.notification_language ?? navegador ?? es` y se persiste en
+el perfil del trabajador vía `PATCH /api/workers/language` (requiere re-autenticación
+con contraseña; "Automático" borra la preferencia y hereda el idioma de la empresa).
+Los catálogos quedan precacheados por el service worker, por lo que la UI traducida
+funciona offline. Los errores de API se traducen por `error_code` (registro en
+`openjornada-api/docs/error-codes.md`). Para añadir un idioma nuevo, ver
+[`docs/I18N.md`](../docs/I18N.md).
 
 ## 📱 Progressive Web App (PWA)
 

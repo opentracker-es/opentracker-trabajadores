@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { DaySummary } from "../types";
 import {
   formatToLocalTimeShort,
@@ -12,6 +13,8 @@ interface MonthlyReportDayDetailProps {
 const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
   day,
 }) => {
+  const { t } = useTranslation();
+
   const formatDateDDMMYYYY = (dateStr: string): string => {
     const parts = dateStr.split("-");
     if (parts.length === 3) {
@@ -24,14 +27,14 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <span className="text-xs font-medium text-gray-500 block">Fecha</span>
+          <span className="text-xs font-medium text-gray-500 block">{t("monthlyReport.dayDetail.date")}</span>
           <span className="text-sm font-semibold text-gray-900">
             {formatDateDDMMYYYY(day.date)}
           </span>
         </div>
         <div>
           <span className="text-xs font-medium text-gray-500 block">
-            Registros
+            {t("monthlyReport.dayDetail.records")}
           </span>
           <span className="text-sm font-semibold text-gray-900">
             {day.records_count}
@@ -42,18 +45,18 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-xs font-medium text-gray-500 block">
-            Primera entrada
+            {t("monthlyReport.dayDetail.firstEntry")}
           </span>
           <span className="text-sm font-semibold text-gray-900">
-            {day.first_entry ? formatToLocalTimeShort(day.first_entry) : "--:--"}
+            {day.first_entry ? formatToLocalTimeShort(day.first_entry) : t("common.timeNoValue")}
           </span>
         </div>
         <div>
           <span className="text-xs font-medium text-gray-500 block">
-            Última salida
+            {t("monthlyReport.dayDetail.lastExit")}
           </span>
           <span className="text-sm font-semibold text-gray-900">
-            {day.last_exit ? formatToLocalTimeShort(day.last_exit) : "--:--"}
+            {day.last_exit ? formatToLocalTimeShort(day.last_exit) : t("common.timeNoValue")}
           </span>
         </div>
       </div>
@@ -61,7 +64,7 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-xs font-medium text-gray-500 block">
-            Tiempo trabajado
+            {t("monthlyReport.dayDetail.worked")}
           </span>
           <span className="text-sm font-semibold text-gray-900">
             {formatMinutesToHoursMinutes(day.total_worked_minutes)}
@@ -69,7 +72,7 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
         </div>
         <div>
           <span className="text-xs font-medium text-gray-500 block">
-            Tiempo de pausa
+            {t("monthlyReport.dayDetail.pauseTime")}
           </span>
           <span className="text-sm font-semibold text-gray-900">
             {formatMinutesToHoursMinutes(day.total_pause_minutes)}
@@ -93,7 +96,7 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
             />
           </svg>
           <span className="text-sm text-yellow-800 font-medium">
-            Sesión abierta - falta registro de salida
+            {t("monthlyReport.dayDetail.openSession")}
           </span>
         </div>
       )}
@@ -114,7 +117,7 @@ const MonthlyReportDayDetail: React.FC<MonthlyReportDayDetailProps> = ({
             />
           </svg>
           <span className="text-sm text-blue-800 font-medium">
-            Este día contiene registros modificados
+            {t("monthlyReport.dayDetail.modified")}
           </span>
         </div>
       )}

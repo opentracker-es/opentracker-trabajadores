@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiService from "../services/api";
 import {
   AbsenceRequestCreate,
@@ -26,6 +27,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
   companyName,
   onCreated,
 }) => {
+  const { t } = useTranslation();
   const [absenceTypes, setAbsenceTypes] = useState<AbsenceTypeOption[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [typeCode, setTypeCode] = useState("");
@@ -42,7 +44,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const selectedType = absenceTypes.find((t) => t.code === typeCode);
+  const selectedType = absenceTypes.find((ty) => ty.code === typeCode);
   const attachmentRequired = selectedType?.requires_attachment ?? false;
 
   // Carga el catálogo real de tipos de la empresa; si falla, usa el fallback.
@@ -87,33 +89,33 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
     setError(null);
 
     if (!typeCode) {
-      setError("Por favor, selecciona un tipo de ausencia.");
+      setError(t("absences.create.selectType"));
       return;
     }
     if (!startDate) {
-      setError("Por favor, selecciona la fecha de inicio.");
+      setError(t("absences.create.selectStart"));
       return;
     }
     if (!endDate) {
-      setError("Por favor, selecciona la fecha de fin.");
+      setError(t("absences.create.selectEnd"));
       return;
     }
     if (endDate < startDate) {
-      setError("La fecha de fin no puede ser anterior a la de inicio.");
+      setError(t("absences.create.endBeforeStart"));
       return;
     }
     if (duration === "hourly") {
       if (!startTime || !endTime) {
-        setError("Indica la hora de inicio y de fin.");
+        setError(t("absences.create.timesRequired"));
         return;
       }
       if (endTime <= startTime) {
-        setError("La hora de fin debe ser posterior a la de inicio.");
+        setError(t("absences.create.endTimeBeforeStart"));
         return;
       }
     }
     if (attachmentRequired && !file) {
-      setError("Este tipo de ausencia requiere adjuntar un justificante.");
+      setError(t("absences.create.attachmentRequired"));
       return;
     }
 
@@ -160,11 +162,31 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
       }, 4000);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al crear la solicitud de ausencia",
+        err instanceof Error ? err.message : t("absences.create.createError"),
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectType = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setError(null);
+    setTypeCode(e.target.value);
+  };
+
+  const handleSelectStart = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    setStartDate(e.target.value);
+  };
+
+  const handleSelectEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    setEndDate(e.target.value);
+  };
+
+  const handleDurationChange = (next: Duration) => {
+    setError(null);
+    setDuration(next);
   };
 
   return (
@@ -187,7 +209,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        Volver
+        {t("common.back")}
       </button>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -206,7 +228,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            Solicitar ausencia
+            {t("absences.create.title")}
           </h3>
         </div>
 
@@ -216,21 +238,18 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
               htmlFor="absence-type"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Tipo de ausencia
+              {t("absences.create.typeLabel")}
             </label>
             <select
               id="absence-type"
               value={typeCode}
-              onChange={(e) => {
-                setError(null);
-                setTypeCode(e.target.value);
-              }}
+              onChange={handleSelectType}
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
               disabled={loading || loadingTypes}
               required
             >
               {loadingTypes ? (
-                <option value="">Cargando tipos...</option>
+                <option value="">{t("absences.create.loadingTypes")}</option>
               ) : (
                 absenceTypes.map((type) => (
                   <option key={type.code} value={type.code}>
@@ -247,16 +266,13 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                 htmlFor="start-date"
                 className="block text-gray-700 text-sm font-bold mb-2"
               >
-                Fecha de inicio
+                {t("absences.create.start")}
               </label>
               <input
                 type="date"
                 id="start-date"
                 value={startDate}
-                onChange={(e) => {
-                  setError(null);
-                  setStartDate(e.target.value);
-                }}
+                onChange={handleSelectStart}
                 className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                 disabled={loading}
                 required
@@ -267,17 +283,14 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                 htmlFor="end-date"
                 className="block text-gray-700 text-sm font-bold mb-2"
               >
-                Fecha de fin
+                {t("absences.create.end")}
               </label>
               <input
                 type="date"
                 id="end-date"
                 value={endDate}
                 min={startDate || undefined}
-                onChange={(e) => {
-                  setError(null);
-                  setEndDate(e.target.value);
-                }}
+                onChange={handleSelectEnd}
                 className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                 disabled={loading}
                 required
@@ -287,7 +300,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
 
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">
-              Duración
+              {t("absences.create.duration")}
             </label>
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center text-sm text-gray-700">
@@ -296,14 +309,11 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                   name="duration"
                   value="full"
                   checked={duration === "full"}
-                  onChange={() => {
-                    setError(null);
-                    setDuration("full");
-                  }}
+                  onChange={() => handleDurationChange("full")}
                   disabled={loading}
                   className="mr-2"
                 />
-                Día completo
+                {t("absences.create.fullDay")}
               </label>
               <label className="flex items-center text-sm text-gray-700">
                 <input
@@ -311,14 +321,11 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                   name="duration"
                   value="half"
                   checked={duration === "half"}
-                  onChange={() => {
-                    setError(null);
-                    setDuration("half");
-                  }}
+                  onChange={() => handleDurationChange("half")}
                   disabled={loading}
                   className="mr-2"
                 />
-                Medio día
+                {t("absences.create.halfDay")}
               </label>
               <label className="flex items-center text-sm text-gray-700">
                 <input
@@ -326,14 +333,11 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                   name="duration"
                   value="hourly"
                   checked={duration === "hourly"}
-                  onChange={() => {
-                    setError(null);
-                    setDuration("hourly");
-                  }}
+                  onChange={() => handleDurationChange("hourly")}
                   disabled={loading}
                   className="mr-2"
                 />
-                Por horas
+                {t("absences.create.hourly")}
               </label>
             </div>
 
@@ -345,8 +349,8 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                   className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
                   disabled={loading}
                 >
-                  <option value="morning">Mañana</option>
-                  <option value="afternoon">Tarde</option>
+                  <option value="morning">{t("absences.portion.morning")}</option>
+                  <option value="afternoon">{t("absences.portion.afternoon")}</option>
                 </select>
               </div>
             )}
@@ -358,7 +362,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                     htmlFor="start-time"
                     className="block text-gray-600 text-xs font-medium mb-1"
                   >
-                    Hora de inicio
+                    {t("absences.create.startTime")}
                   </label>
                   <input
                     type="time"
@@ -374,7 +378,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                     htmlFor="end-time"
                     className="block text-gray-600 text-xs font-medium mb-1"
                   >
-                    Hora de fin
+                    {t("absences.create.endTime")}
                   </label>
                   <input
                     type="time"
@@ -394,7 +398,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
               htmlFor="comment"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Motivo (opcional)
+              {t("absences.create.commentLabel")}
             </label>
             <textarea
               id="comment"
@@ -402,7 +406,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
               rows={4}
               maxLength={1000}
               className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500 resize-none"
-              placeholder="Añade un comentario para el administrador (opcional)..."
+              placeholder={t("absences.create.commentPlaceholder")}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               disabled={loading}
@@ -414,7 +418,10 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
               htmlFor="attachment"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Justificante{attachmentRequired ? " (obligatorio)" : " (opcional)"}
+              {t("absences.create.justification")}
+              {attachmentRequired
+                ? t("absences.create.justificationRequired")
+                : t("absences.create.justificationOptional")}
             </label>
             <input
               type="file"
@@ -425,7 +432,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
             />
             {attachmentRequired && (
               <p className="mt-2 text-sm text-gray-500">
-                Este tipo de ausencia requiere adjuntar un justificante.
+                {t("absences.create.justificationHelp")}
               </p>
             )}
           </div>
@@ -446,7 +453,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                   />
                 </svg>
-                <span className="truncate">Empresa: {companyName}</span>
+                <span className="truncate">{t("absences.create.companyWith", { name: companyName })}</span>
               </div>
             </div>
           )}
@@ -468,7 +475,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                 />
               </svg>
               <span>
-                Solicitud enviada correctamente. Será revisada por un administrador.
+                {t("absences.create.success")}
               </span>
             </div>
           )}
@@ -521,7 +528,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Enviando solicitud...
+                  {t("absences.create.submitting")}
                 </>
               ) : (
                 <>
@@ -538,7 +545,7 @@ const CreateAbsenceRequest: React.FC<CreateAbsenceRequestProps> = ({
                       d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                     />
                   </svg>
-                  Enviar solicitud
+                  {t("absences.create.submit")}
                 </>
               )}
             </button>

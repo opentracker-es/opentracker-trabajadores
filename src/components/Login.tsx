@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { authService } from "../services/auth";
+import LoginLanguageSelector from "./LoginLanguageSelector";
 
 interface LoginProps {
   onLogin: (email: string, password: string, workerName: string) => void;
@@ -9,6 +11,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLogo }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,7 +38,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
       onLogin(formData.email, formData.password, name);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error inesperado al iniciar sesión";
+        err instanceof Error ? err.message : t("login.unexpectedError");
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -60,16 +63,19 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
           />
         )}
         <h1 className="text-3xl font-bold text-gray-900">{appName}</h1>
-        <p className="mt-2 text-sm text-gray-600">Registro de jornada laboral</p>
+        <p className="mt-2 text-sm text-gray-600">{t("login.subtitle")}</p>
       </div>
 
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-2">
+          <LoginLanguageSelector />
+        </div>
         <form
           onSubmit={handleSubmit}
           className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8"
         >
           <h2 className="text-2xl font-semibold text-gray-900 text-center mb-6">
-            Iniciar sesión
+            {t("login.title")}
           </h2>
 
           <div className="mb-4">
@@ -77,7 +83,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="email"
             >
-              Email
+              {t("common.email")}
             </label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
@@ -85,7 +91,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
               type="email"
               name="email"
               autoComplete="email"
-              placeholder="trabajador@example.com"
+              placeholder={t("login.emailPlaceholder")}
               value={formData.email}
               onChange={handleChange}
               required
@@ -98,7 +104,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="password"
             >
-              Contraseña
+              {t("common.password")}
             </label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
@@ -129,7 +135,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
               type="submit"
               disabled={loading}
             >
-              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+              {loading ? t("login.submitting") : t("login.submit")}
             </button>
           </div>
 
@@ -140,7 +146,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onForgotPassword, appName, appLo
               className="text-sm text-blue-500 hover:text-blue-700 font-medium transition-colors"
               disabled={loading}
             >
-              ¿Olvidaste tu contraseña?
+              {t("login.forgotPassword")}
             </button>
           </div>
         </form>
